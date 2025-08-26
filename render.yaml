@@ -2,6 +2,6 @@ services:
   - type: web
     name: simple-step-flutter
     env: node
-    buildCommand: cp simple-package.json package.json && npm install
+    buildCommand: npm install
     startCommand: node simple-server.js
     pullRequestPreviewsEnabled: false
