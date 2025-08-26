@@ -6,4 +6,5 @@ rm -f build/web/assets/.env
 echo "Adding Render configuration files..."
 cp web_templates/_headers build/web/_headers
 cp web_templates/_redirects build/web/_redirects
+cp web_templates/.htaccess build/web/.htaccess
 echo "Build complete and cleaned!"
