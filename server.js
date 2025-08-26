@@ -5,14 +5,14 @@ const port = process.env.PORT || 3000;
 
 // Set proper MIME types
 app.use(express.static('build/web', {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript');
-    } else if (path.endsWith('.css')) {
+    } else if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
-    } else if (path.endsWith('.wasm')) {
+    } else if (filePath.endsWith('.wasm')) {
       res.setHeader('Content-Type', 'application/wasm');
-    } else if (path.endsWith('.json')) {
+    } else if (filePath.endsWith('.json')) {
       res.setHeader('Content-Type', 'application/json');
     }
     
@@ -21,7 +21,7 @@ app.use(express.static('build/web', {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     
     // Cache headers for static assets
-    if (path.includes('/assets/') || path.endsWith('.js') || path.endsWith('.css')) {
+    if (filePath.includes('/assets/') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
   }
@@ -34,4 +34,5 @@ app.get('*', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Flutter web app serving on port ${port}`);
+  console.log(`Serving files from: ${path.join(__dirname, 'build/web')}`);
 });

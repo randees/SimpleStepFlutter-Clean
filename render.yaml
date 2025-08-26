@@ -2,7 +2,7 @@ services:
   - type: web
     name: simple-step-flutter
     env: node
-    buildCommand: npm install && echo "Build completed"
+    buildCommand: npm install
     startCommand: npm start
     pullRequestPreviewsEnabled: false
     headers:
