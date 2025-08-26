@@ -1,8 +1,7 @@
 services:
   - type: web
     name: simple-step-flutter
-    env: node
-    rootDir: src
-    buildCommand: npm install
-    startCommand: npm start
+    env: python
+    buildCommand: echo "No build needed - using pre-built files"
+    startCommand: python server.py
     pullRequestPreviewsEnabled: false
