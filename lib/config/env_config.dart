@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 
 /// Secure configuration manager that loads API keys and secrets from environment variables
 /// This ensures sensitive data is never committed to version control
@@ -11,14 +12,45 @@ class EnvConfig {
     if (_isInitialized) return;
 
     try {
-      // Load environment variables from .env file
+      // For web deployment, try to load from environment first
+      if (kIsWeb) {
+        print('🌐 Web platform detected, checking environment variables...');
+        _isInitialized = true;
+        
+        // Check if we have environment variables available
+        if (_getEnvDirect('SUPABASE_URL').isNotEmpty) {
+          print('✅ Environment variables found for web deployment');
+          return;
+        }
+      }
+      
+      // Load environment variables from .env file (for local development)
       await dotenv.load(fileName: ".env");
       _isInitialized = true;
-      print('✅ Environment configuration loaded successfully');
+      print('✅ Environment configuration loaded successfully from .env file');
     } catch (e) {
       print('⚠️ Warning: Could not load .env file: $e');
-      print('⚠️ Using default/fallback configuration');
-      _isInitialized = true; // Continue with defaults
+      print('⚠️ Trying to use environment variables directly...');
+      _isInitialized = true; // Continue with environment variables
+    }
+  }
+
+  /// Get environment variable directly (for web deployment)
+  static String _getEnvDirect(String key) {
+    // Try to get from compile-time environment first
+    switch (key) {
+      case 'SUPABASE_URL':
+        return const String.fromEnvironment('SUPABASE_URL');
+      case 'SUPABASE_ANON_KEY':
+        return const String.fromEnvironment('SUPABASE_ANON_KEY');
+      case 'OPENAI_API_KEY':
+        return const String.fromEnvironment('OPENAI_API_KEY');
+      case 'FLUTTER_ENV':
+        return const String.fromEnvironment('FLUTTER_ENV');
+      case 'DEBUG_MODE':
+        return const String.fromEnvironment('DEBUG_MODE');
+      default:
+        return '';
     }
   }
 
@@ -29,6 +61,14 @@ class EnvConfig {
         'EnvConfig not initialized. Call EnvConfig.initialize() first.',
       );
     }
+    
+    // For web, try compile-time environment first
+    if (kIsWeb) {
+      final envValue = _getEnvDirect(key);
+      if (envValue.isNotEmpty) return envValue;
+    }
+    
+    // Fallback to dotenv or provided fallback
     return dotenv.env[key] ?? fallback ?? '';
   }
 
@@ -84,6 +124,7 @@ class EnvConfig {
   /// Get configuration summary for debugging (with masked secrets)
   static Map<String, dynamic> getConfigSummary() {
     return {
+      'platform': kIsWeb ? 'web' : 'native',
       'environment': isDevelopment ? 'development' : 'production',
       'debug_mode': debugMode,
       'supabase_configured': isSupabaseConfigured,
