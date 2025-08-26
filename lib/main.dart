@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'config/env_config.dart';
 import 'config/supabase_config.dart';
 import 'config/openai_config.dart';
@@ -26,6 +27,14 @@ void main() async {
 
   // Initialize Supabase if configuration is available
   try {
+    print('🔄 Main: Checking Supabase configuration...');
+    
+    // For web platform, give some extra time to ensure config is loaded
+    if (kIsWeb) {
+      print('🌐 Main: Web platform detected, checking config status...');
+      await Future.delayed(Duration(milliseconds: 100)); // Small delay to ensure config loading
+    }
+    
     if (SupabaseConfig.isConfigured) {
       print('🔄 Main: Supabase config found, initializing...');
       await SupabaseService.initialize();
@@ -38,6 +47,7 @@ void main() async {
       print(
         '⚠️ Main: Supabase configuration not found in environment variables',
       );
+      print('📋 Current config status: ${EnvConfig.getConfigSummary()}');
       print(
         '⚠️ Main: Please check your .env file and ensure SUPABASE_URL and SUPABASE_ANON_KEY are set',
       );

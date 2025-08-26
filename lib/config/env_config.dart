@@ -17,7 +17,9 @@ class EnvConfig {
     try {
       // For web deployment, fetch configuration from server API
       if (kIsWeb) {
-        print('🌐 Web platform detected, fetching configuration from server...');
+        print(
+          '🌐 Web platform detected, fetching configuration from server...',
+        );
         await _loadWebConfig();
         _isInitialized = true;
         print('✅ Web configuration loaded successfully from server');
@@ -38,12 +40,28 @@ class EnvConfig {
   /// Load configuration from server API (web platform only)
   static Future<void> _loadWebConfig() async {
     try {
+      print('🌐 Making request to /api/config...');
       final response = await http.get(Uri.parse('/api/config'));
+      
+      print('🌐 Server response status: ${response.statusCode}');
+      print('🌐 Server response body: ${response.body}');
+      
       if (response.statusCode == 200) {
         _webConfig = json.decode(response.body);
-        print('✅ Loaded configuration from server: ${_webConfig?.keys.join(', ')}');
+        print(
+          '✅ Loaded configuration from server: ${_webConfig?.keys.join(', ')}',
+        );
+        print('🔍 Config values:');
+        _webConfig?.forEach((key, value) {
+          if (key.toLowerCase().contains('key') || key.toLowerCase().contains('secret')) {
+            print('  $key: ${value.toString().length > 0 ? "[MASKED ${value.toString().length} chars]" : "[EMPTY]"}');
+          } else {
+            print('  $key: $value');
+          }
+        });
       } else {
         print('⚠️ Failed to load config from server: ${response.statusCode}');
+        print('⚠️ Response body: ${response.body}');
         _webConfig = {}; // Empty config as fallback
       }
     } catch (e) {
@@ -62,21 +80,33 @@ class EnvConfig {
 
     // For web, use server-provided configuration
     if (kIsWeb) {
-      if (_webConfig == null) return fallback ?? '';
+      if (_webConfig == null) {
+        print('⚠️ Web config is null for key: $key');
+        return fallback ?? '';
+      }
       
       // Map API keys to expected environment variable names
+      String? value;
       switch (key) {
         case 'SUPABASE_URL':
-          return _webConfig!['supabaseUrl']?.toString() ?? fallback ?? '';
+          value = _webConfig!['supabaseUrl']?.toString();
+          break;
         case 'SUPABASE_ANON_KEY':
-          return _webConfig!['supabaseAnonKey']?.toString() ?? fallback ?? '';
+          value = _webConfig!['supabaseAnonKey']?.toString();
+          break;
         case 'FLUTTER_ENV':
-          return _webConfig!['environment']?.toString() ?? fallback ?? 'production';
+          value = _webConfig!['environment']?.toString();
+          break;
         case 'DEBUG_MODE':
-          return _webConfig!['debugMode']?.toString() ?? fallback ?? 'false';
+          value = _webConfig!['debugMode']?.toString();
+          break;
         default:
-          return fallback ?? '';
+          value = null;
       }
+      
+      final result = value ?? fallback ?? '';
+      print('🔍 _getEnv($key) -> ${result.isEmpty ? "[EMPTY]" : (key.toLowerCase().contains("key") ? "[MASKED ${result.length} chars]" : result)}');
+      return result;
     }
 
     // For other platforms, use dotenv or provided fallback
@@ -102,8 +132,7 @@ class EnvConfig {
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
   // OpenAI Configuration (Note: Not exposed to web for security)
-  static String get openaiApiKey => 
-      kIsWeb ? '' : _getEnv('OPENAI_API_KEY');
+  static String get openaiApiKey => kIsWeb ? '' : _getEnv('OPENAI_API_KEY');
 
   /// Check if OpenAI is properly configured
   static bool get isOpenAIConfigured =>
