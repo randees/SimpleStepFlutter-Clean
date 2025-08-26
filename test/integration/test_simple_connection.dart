@@ -5,8 +5,7 @@ void main() async {
   print('🔄 Testing Supabase connection via HTTP...');
 
   final url = 'https://YOUR-PROJECT-ID.supabase.co';
-  final anonKey =
-      '"YOUR-SUPABASE-ANON-KEY"
+  final anonKey = 'YOUR-SUPABASE-ANON-KEY';
 
   print('URL: $url');
   print('Anon Key: ${anonKey.substring(0, 20)}...\n');
