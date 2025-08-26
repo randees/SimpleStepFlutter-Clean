@@ -1,3 +1,7 @@
+# ===============================================
+# FLUTTER & DART
+# ===============================================
+
 # Miscellaneous
 *.class
 *.log
@@ -5,7 +9,6 @@
 *.swp
 .DS_Store
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
@@ -18,15 +21,14 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code (uncomment if you want to exclude VS Code settings)
+# .vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
@@ -38,6 +40,15 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# ===============================================
+# PLATFORM SPECIFIC
+# ===============================================
 
 # Android Studio will place build artifacts here
 /android/app/debug
@@ -58,8 +69,6 @@ android/key.properties
 /ios/.symlinks/
 /ios/Flutter/Flutter.framework
 /ios/Flutter/Flutter.podspec
-/ios/Runner.xcworkspace/xcshareddata/
-/ios/Runner.xcodeproj/xcshareddata/
 
 # macOS specific files
 /macos/Pods/
@@ -68,71 +77,88 @@ android/key.properties
 # Linux specific files
 /linux/flutter/ephemeral/
 
-# Windows specific files
+# Windows specific files  
 /windows/flutter/ephemeral/
 
-# Web specific files
-/web/
+# Web specific (keep web/ folder but exclude build artifacts)
+/web/packages/
+/web/main.dart.js
+/web/main.dart.js.map
 
-# Environment and secrets
+# ===============================================
+# SECURITY & SECRETS (CRITICAL!)
+# ===============================================
+
+# Environment files - NEVER COMMIT THESE!
 .env
+.env.*
 .env.local
-.env.*.local
 .env.development
 .env.production
 .env.staging
+.env.test
+
+# API Keys and credentials
 *.pem
 *.p12
 *.keystore
-
-# Supabase sensitive files
-supabase/.env.local
-supabase/.env
-supabase/.env.*
-supabase/config.toml.local
-supabase/.temp/
-supabase/.branches/
-supabase/.git/
-supabase/node_modules/
-supabase/package-lock.json
-
-# MCP Server secrets and configuration
-**/mcp_secrets.json
-**/openai_config.json
-lib/config/openai_config.dart.local
-lib/config/supabase_config.dart
-
-# API Keys and tokens
 **/api_keys.json
 **/tokens.json
 **/*_secret*
 **/*_token*
 **/*_key*
 **/credentials.json
-
-# Supabase CLI generated files
-supabase/.temp/
-supabase/logs/
-supabase/volumes/
-
-# OpenAI and AI service keys
 openai_key.txt
 anthropic_key.txt
 gemini_key.txt
 
-# Health Connect and plugin specific
-/android/app/src/main/res/xml/health_permissions.xml
+# Configuration files that might contain secrets
+lib/config/*_config.dart.local
+supabase_config_template.dart
 
-# IDE and editor files
-.vscode/settings.json
-.vscode/launch.json
-*.code-workspace
+# ===============================================
+# SUPABASE
+# ===============================================
 
-# VS Code workspace settings that might contain sensitive paths
-.vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
-.vscode/extensions.json
+# Supabase local files
+supabase/.env.local
+supabase/.env
+supabase/.env.*
+supabase/.temp/
+supabase/.branches/
+supabase/logs/
+supabase/volumes/
+
+# Node.js in Supabase functions
+supabase/functions/node_modules/
+supabase/node_modules/
+supabase/package-lock.json
+
+# ===============================================
+# DEVELOPMENT & TESTING
+# ===============================================
+
+# Test files with potential secrets
+test_*.dart.local
+**/test_config.dart
+**/dev_config.dart
+**/local_config.dart
+integration_test/secrets/
+test/fixtures/secrets/
+
+# Test coverage
+lcov.info
+/test_driver/screenshots/
+
+# ===============================================
+# IDE & EDITOR
+# ===============================================
+
+# VS Code workspace settings (uncomment if needed)
+# .vscode/settings.json
+# .vscode/launch.json
+# .vscode/tasks.json
+# .vscode/extensions.json
 
 # JetBrains IDEs
 .idea/
@@ -140,26 +166,42 @@ gemini_key.txt
 *.iml
 *.ipr
 
-# Temporary files
-*.tmp
-*.temp
-*~
+# ===============================================
+# SYSTEM & TEMPORARY
+# ===============================================
 
 # OS generated files
 Thumbs.db
 .fseventsd
 .Spotlight-V100
 .Trashes
+.DS_Store
 
-# Node.js and npm related
+# Temporary files
+*.tmp
+*.temp
+*~
+*.backup
+*.bak
+*_backup.*
+*.orig
+
+# Log files
+*.log
+logs/
+**/debug.log
+**/error.log
+
+# ===============================================
+# PACKAGE MANAGERS
+# ===============================================
+
+# Node.js and npm
 node_modules/
 **/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json.lock
-
-# Package manager files
 .pnpm-debug.log*
 .yarn-integrity
 .yarn/
@@ -168,40 +210,31 @@ package-lock.json.lock
 # Flutter version management
 .fvm/
 
-# Generated files
-*.g.dart
-*.freezed.dart
-*.mocks.dart
-
-# Development and testing files with potential secrets
-test_*.dart.local
-**/test_config.dart
-**/dev_config.dart
-**/local_config.dart
-integration_test/secrets/
-test/fixtures/secrets/
-
-# Backup files that might contain sensitive data
-*.backup
-*.bak
-*_backup.*
-*.orig
-
-# Log files that might contain sensitive information
-*.log
-logs/
-supabase/logs/
-**/debug.log
-**/error.log
-
-# Test coverage
-lcov.info
-/test_driver/screenshots/
+# ===============================================
+# CLOUD & DEPLOYMENT
+# ===============================================
 
 # Firebase
 .firebase/
 firebase-debug.log*
 firebase-debug.*.log*
+.firebaserc
 
 # Crashlytics
 crashlytics-build.properties
+
+# ===============================================
+# PROJECT SPECIFIC
+# ===============================================
+
+# MCP Server configuration files with secrets
+**/mcp_secrets.json
+**/openai_config.json
+
+# Health Connect sensitive data
+/android/app/src/main/res/xml/network_security_config.xml.local
+
+# Any local development overrides
+*.local
+local_*
+

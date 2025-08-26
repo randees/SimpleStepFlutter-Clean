@@ -1,80 +1,113 @@
-# Simple Step Flutter
+# Ì∫Ä Simple Step Flutter - Health Tracking App
 
-A simple Flutter app that displays the step count from Health Connect on Android devices.
+A comprehensive Flutter application for health data tracking with AI-powered analytics, built with Supabase backend and OpenAI integration.
 
-## Features
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=openai&logoColor=white)
 
-- Displays step count from Health Connect in large black numbers on a white background
-- Shows 0 if no step data is available or permissions are denied
-- Graceful error handling
+## ‚ú® Features
 
-## Requirements
+- **Ì≥± Cross-Platform**: iOS, Android, Web, Windows, macOS, Linux
+- **Ì¥í Secure Configuration**: Environment-based secrets management
+- **Ì≥ä Health Tracking**: Step counting, health data synchronization
+- **Ì¥ñ AI Analytics**: OpenAI-powered health insights and recommendations
+- **Ì∑ÑÔ∏è Database Integration**: Supabase for user data and health records
+- **Ìæ® Modern UI**: Material Design with FluentUI icon support
+- **Ì¥å MCP Integration**: Model Context Protocol for advanced AI interactions
 
-- Android device with Health Connect support
-- Flutter SDK installed
-- Android development environment set up
+## Ì∫Ä Quick Start
 
-## Installation & Setup
+### Prerequisites
 
-1. Clone or download this project
-2. Open terminal in the project directory
-3. Install dependencies:
+- Flutter SDK (>=3.0.0)
+- A Supabase account and project
+- An OpenAI API key (optional, for AI features)
 
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/SimpleStepFlutter.git
+   cd SimpleStepFlutter
+   ```
+
+2. **Install dependencies**
    ```bash
    flutter pub get
    ```
 
-## How to Launch the Program
-
-### Option 1: Using VS Code
-
-1. Open the project in VS Code
-2. Connect your Android device or start an Android emulator
-3. Press F5 or go to Run > Start Debugging
-4. Select your target device when prompted
-
-### Option 2: Using Command Line
-
-1. Connect your Android device via USB with developer mode enabled, or start an Android emulator
-2. Open terminal in the project directory
-3. Check connected devices:
-
+3. **Configure environment variables**
    ```bash
-   flutter devices
+   cp .env.example .env
+   ```
+   
+   Edit `.env` with your API keys:
+   ```properties
+   SUPABASE_URL=https://YOUR-PROJECT-ID.supabase.co
+   SUPABASE_ANON_KEY=YOUR-SUPABASE-ANON-KEY
+   OPENAI_API_KEY=YOUR-OPENAI-API-KEY
    ```
 
-4. Run the app:
-
+4. **Run the application**
    ```bash
    flutter run
    ```
 
-### Option 3: Build APK for Installation
+## Ì≥ã Configuration Guide
 
-1. Build the APK:
+### Supabase Setup
 
-   ```bash
-   flutter build apk --release
-   ```
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Get your project URL and anon key from Settings > API
+3. Run the database migrations from `supabase/migrations/`
+4. Update your `.env` file with the credentials
 
-2. Install the APK on your device:
+### OpenAI Setup
 
-   ```bash
-   flutter install
-   ```
+1. Get an API key from [platform.openai.com](https://platform.openai.com/api-keys)
+2. Add it to your `.env` file as `OPENAI_API_KEY`
 
-## Permissions
+For detailed setup instructions, see [SECURITY_SETUP.md](SECURITY_SETUP.md).
 
-The app will request permission to read step data from Health Connect when first launched. Grant the permission to see your actual step count.
+## Ì¥í Security
 
-## Troubleshooting
+This project uses environment variables to manage sensitive configuration:
 
-- If you see "0" steps, make sure Health Connect is installed and has step data
-- Ensure you've granted the app permission to read health data
-- Make sure your device supports Health Connect (Android 14+ or compatible devices)
+- All API keys are stored in `.env` (never committed)
+- Configuration validation and error handling
+- Secure logging (secrets are masked)
+- Production-ready security practices
 
-## Development
+See [SECURITY_SETUP.md](SECURITY_SETUP.md) for detailed security guidelines.
 
-- Built with Flutter and Dart
-- Uses the `health` package for Health Connect integration
-- Minimal UI focusing on displaying step count only
+## Ì≥ñ Documentation
+
+- [Security Setup Guide](SECURITY_SETUP.md)
+- [MCP Testing Guide](Docs/MCP_TESTING_GUIDE.md)
+- [Health Connect Testing](Docs/HEALTH_CONNECT_TESTING_GUIDE.md)
+- [Project Overview](Docs/project_overview.md)
+
+## Ì¥ù Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## Ì≥Ñ License
+
+This project is licensed under the MIT License.
+
+## Ìπè Acknowledgments
+
+- [Flutter](https://flutter.dev/) - UI framework
+- [Supabase](https://supabase.com/) - Backend as a Service
+- [OpenAI](https://openai.com/) - AI integration
+- [FluentUI](https://developer.microsoft.com/en-us/fluentui) - Icon system
+
+---
+
+**‚ö†Ô∏è Important**: Remember to configure your `.env` file before running the application. Never commit your `.env` file to version control!
