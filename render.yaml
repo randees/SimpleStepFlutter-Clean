@@ -1,7 +1,7 @@
 services:
   - type: web
     name: simple-step-flutter
-    env: static
-    buildCommand: echo "Using pre-built files"
-    staticPublishPath: ./build/web
+    env: node
+    buildCommand: cp simple-package.json package.json && npm install
+    startCommand: node simple-server.js
     pullRequestPreviewsEnabled: false
