@@ -1,0 +1,9 @@
+{
+  "method": "tools/call",
+  "params": {
+    "name": "get_activity_patterns",
+    "arguments": {
+      "days": 30
+    }
+  }
+}

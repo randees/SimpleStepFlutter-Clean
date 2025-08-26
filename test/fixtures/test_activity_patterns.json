@@ -1,0 +1,10 @@
+{
+  "method": "tools/call",
+  "params": {
+    "name": "get_activity_patterns",
+    "arguments": {
+      "userId": "test-user-123",
+      "days": 30
+    }
+  }
+}

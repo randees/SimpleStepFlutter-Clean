@@ -1,0 +1,207 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Additional Android files
+/android/.gradle/
+/android/captures/
+/android/gradlew
+/android/gradlew.bat
+/android/local.properties
+android/app/google-services.json
+android/key.properties
+
+# iOS specific files
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Runner.xcworkspace/xcshareddata/
+/ios/Runner.xcodeproj/xcshareddata/
+
+# macOS specific files
+/macos/Pods/
+/macos/.symlinks/
+
+# Linux specific files
+/linux/flutter/ephemeral/
+
+# Windows specific files
+/windows/flutter/ephemeral/
+
+# Web specific files
+/web/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+*.pem
+*.p12
+*.keystore
+
+# Supabase sensitive files
+supabase/.env.local
+supabase/.env
+supabase/.env.*
+supabase/config.toml.local
+supabase/.temp/
+supabase/.branches/
+supabase/.git/
+supabase/node_modules/
+supabase/package-lock.json
+
+# MCP Server secrets and configuration
+**/mcp_secrets.json
+**/openai_config.json
+lib/config/openai_config.dart.local
+lib/config/supabase_config.dart
+
+# API Keys and tokens
+**/api_keys.json
+**/tokens.json
+**/*_secret*
+**/*_token*
+**/*_key*
+**/credentials.json
+
+# Supabase CLI generated files
+supabase/.temp/
+supabase/logs/
+supabase/volumes/
+
+# OpenAI and AI service keys
+openai_key.txt
+anthropic_key.txt
+gemini_key.txt
+
+# Health Connect and plugin specific
+/android/app/src/main/res/xml/health_permissions.xml
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+*.code-workspace
+
+# VS Code workspace settings that might contain sensitive paths
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# OS generated files
+Thumbs.db
+.fseventsd
+.Spotlight-V100
+.Trashes
+
+# Node.js and npm related
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.lock
+
+# Package manager files
+.pnpm-debug.log*
+.yarn-integrity
+.yarn/
+.pnp.*
+
+# Flutter version management
+.fvm/
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Development and testing files with potential secrets
+test_*.dart.local
+**/test_config.dart
+**/dev_config.dart
+**/local_config.dart
+integration_test/secrets/
+test/fixtures/secrets/
+
+# Backup files that might contain sensitive data
+*.backup
+*.bak
+*_backup.*
+*.orig
+
+# Log files that might contain sensitive information
+*.log
+logs/
+supabase/logs/
+**/debug.log
+**/error.log
+
+# Test coverage
+lcov.info
+/test_driver/screenshots/
+
+# Firebase
+.firebase/
+firebase-debug.log*
+firebase-debug.*.log*
+
+# Crashlytics
+crashlytics-build.properties

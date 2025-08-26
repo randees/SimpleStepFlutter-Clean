@@ -1,0 +1,1 @@
+I want to create a spec in specs/updating_database_for_personas.md to change the supabase database to store all health data that I can capture from Apple Health (Ios) and Health Connect from android.  At this time I dont want to make any changes to our app for capturing the data just update the database
