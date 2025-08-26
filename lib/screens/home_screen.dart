@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 2; // Default to AI/MCP Test page
 
   final List<Widget> _pages = [
     const StepCounterPage(),
