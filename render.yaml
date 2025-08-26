@@ -1,7 +1,7 @@
 services:
   - type: web
     name: simple-step-flutter
-    env: python
-    buildCommand: echo "No build needed - using pre-built files"
-    startCommand: python server.py
+    env: static
+    buildCommand: echo "Using pre-built files"
+    staticPublishPath: ./build/web
     pullRequestPreviewsEnabled: false
