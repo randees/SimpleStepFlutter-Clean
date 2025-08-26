@@ -1,10 +1,33 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Find the build directory
+let buildPath = 'build/web';
+if (!fs.existsSync(buildPath)) {
+  // Try alternative paths
+  const alternatives = [
+    '../build/web',
+    '../../build/web',
+    './build/web',
+    '/opt/render/project/build/web'
+  ];
+  
+  for (const alt of alternatives) {
+    if (fs.existsSync(alt)) {
+      buildPath = alt;
+      break;
+    }
+  }
+}
+
+console.log(`Using build path: ${buildPath}`);
+console.log(`Absolute build path: ${path.resolve(buildPath)}`);
+
 // Set proper MIME types
-app.use(express.static('build/web', {
+app.use(express.static(buildPath, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript');
@@ -29,10 +52,15 @@ app.use(express.static('build/web', {
 
 // Handle client-side routing (SPA)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build/web/index.html'));
+  const indexPath = path.join(buildPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(path.resolve(indexPath));
+  } else {
+    res.status(404).send('Flutter app not found. Build directory: ' + buildPath);
+  }
 });
 
 app.listen(port, () => {
   console.log(`Flutter web app serving on port ${port}`);
-  console.log(`Serving files from: ${path.join(__dirname, 'build/web')}`);
+  console.log(`Serving files from: ${path.resolve(buildPath)}`);
 });

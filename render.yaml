@@ -2,7 +2,9 @@ services:
   - type: web
     name: simple-step-flutter
     env: node
-    rootDir: .
-    buildCommand: npm install
+    buildCommand: |
+      ls -la
+      pwd
+      npm install
     startCommand: npm start
     pullRequestPreviewsEnabled: false
