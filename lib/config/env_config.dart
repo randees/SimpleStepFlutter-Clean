@@ -1,10 +1,13 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 /// Secure configuration manager that loads API keys and secrets from environment variables
 /// This ensures sensitive data is never committed to version control
 class EnvConfig {
   static bool _isInitialized = false;
+  static Map<String, dynamic>? _webConfig;
 
   /// Initialize environment configuration
   /// Must be called before accessing any configuration values
@@ -12,45 +15,40 @@ class EnvConfig {
     if (_isInitialized) return;
 
     try {
-      // For web deployment, try to load from environment first
+      // For web deployment, fetch configuration from server API
       if (kIsWeb) {
-        print('🌐 Web platform detected, checking environment variables...');
+        print('🌐 Web platform detected, fetching configuration from server...');
+        await _loadWebConfig();
         _isInitialized = true;
-        
-        // Check if we have environment variables available
-        if (_getEnvDirect('SUPABASE_URL').isNotEmpty) {
-          print('✅ Environment variables found for web deployment');
-          return;
-        }
+        print('✅ Web configuration loaded successfully from server');
+        return;
       }
-      
+
       // Load environment variables from .env file (for local development)
       await dotenv.load(fileName: ".env");
       _isInitialized = true;
       print('✅ Environment configuration loaded successfully from .env file');
     } catch (e) {
-      print('⚠️ Warning: Could not load .env file: $e');
-      print('⚠️ Trying to use environment variables directly...');
-      _isInitialized = true; // Continue with environment variables
+      print('⚠️ Warning: Could not load configuration: $e');
+      print('⚠️ Using fallback configuration...');
+      _isInitialized = true; // Continue with fallbacks
     }
   }
 
-  /// Get environment variable directly (for web deployment)
-  static String _getEnvDirect(String key) {
-    // Try to get from compile-time environment first
-    switch (key) {
-      case 'SUPABASE_URL':
-        return const String.fromEnvironment('SUPABASE_URL');
-      case 'SUPABASE_ANON_KEY':
-        return const String.fromEnvironment('SUPABASE_ANON_KEY');
-      case 'OPENAI_API_KEY':
-        return const String.fromEnvironment('OPENAI_API_KEY');
-      case 'FLUTTER_ENV':
-        return const String.fromEnvironment('FLUTTER_ENV');
-      case 'DEBUG_MODE':
-        return const String.fromEnvironment('DEBUG_MODE');
-      default:
-        return '';
+  /// Load configuration from server API (web platform only)
+  static Future<void> _loadWebConfig() async {
+    try {
+      final response = await http.get(Uri.parse('/api/config'));
+      if (response.statusCode == 200) {
+        _webConfig = json.decode(response.body);
+        print('✅ Loaded configuration from server: ${_webConfig?.keys.join(', ')}');
+      } else {
+        print('⚠️ Failed to load config from server: ${response.statusCode}');
+        _webConfig = {}; // Empty config as fallback
+      }
+    } catch (e) {
+      print('⚠️ Error loading web config: $e');
+      _webConfig = {}; // Empty config as fallback
     }
   }
 
@@ -61,14 +59,27 @@ class EnvConfig {
         'EnvConfig not initialized. Call EnvConfig.initialize() first.',
       );
     }
-    
-    // For web, try compile-time environment first
+
+    // For web, use server-provided configuration
     if (kIsWeb) {
-      final envValue = _getEnvDirect(key);
-      if (envValue.isNotEmpty) return envValue;
+      if (_webConfig == null) return fallback ?? '';
+      
+      // Map API keys to expected environment variable names
+      switch (key) {
+        case 'SUPABASE_URL':
+          return _webConfig!['supabaseUrl']?.toString() ?? fallback ?? '';
+        case 'SUPABASE_ANON_KEY':
+          return _webConfig!['supabaseAnonKey']?.toString() ?? fallback ?? '';
+        case 'FLUTTER_ENV':
+          return _webConfig!['environment']?.toString() ?? fallback ?? 'production';
+        case 'DEBUG_MODE':
+          return _webConfig!['debugMode']?.toString() ?? fallback ?? 'false';
+        default:
+          return fallback ?? '';
+      }
     }
-    
-    // Fallback to dotenv or provided fallback
+
+    // For other platforms, use dotenv or provided fallback
     return dotenv.env[key] ?? fallback ?? '';
   }
 
@@ -90,8 +101,9 @@ class EnvConfig {
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
-  // OpenAI Configuration
-  static String get openaiApiKey => _getEnv('OPENAI_API_KEY');
+  // OpenAI Configuration (Note: Not exposed to web for security)
+  static String get openaiApiKey => 
+      kIsWeb ? '' : _getEnv('OPENAI_API_KEY');
 
   /// Check if OpenAI is properly configured
   static bool get isOpenAIConfigured =>
