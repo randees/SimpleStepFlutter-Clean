@@ -5,15 +5,26 @@ const port = process.env.PORT || 3000;
 
 // API endpoint to provide environment variables to Flutter web
 app.get('/api/config', (req, res) => {
-  // Only provide non-sensitive configuration or properly managed secrets
+  // Only provide configuration that's safe for client-side use
   const config = {
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+    openaiApiKey: process.env.OPENAI_API_KEY || '', // OpenAI key for client-side AI features
+    mcpEndpoint: process.env.MCP_ENDPOINT || '',
+    mcpSecret: process.env.MCP_SECRET || '',
     environment: process.env.FLUTTER_ENV || 'production',
     debugMode: process.env.DEBUG_MODE === 'true',
-    // Note: Never expose service role keys or OpenAI keys to client!
-    // These should only be used server-side
+    // Note: Never expose service role keys to client - those stay server-side only
   };
+  
+  console.log('📋 Config request - providing client configuration:');
+  console.log('- supabaseUrl:', config.supabaseUrl ? 'Set' : 'Not set');
+  console.log('- supabaseAnonKey:', config.supabaseAnonKey ? 'Set' : 'Not set');  
+  console.log('- openaiApiKey:', config.openaiApiKey ? `Set (${config.openaiApiKey.length} chars)` : 'Not set');
+  console.log('- mcpEndpoint:', config.mcpEndpoint ? 'Set' : 'Not set');
+  console.log('- mcpSecret:', config.mcpSecret ? 'Set' : 'Not set');
+  console.log('- environment:', config.environment);
+  console.log('- debugMode:', config.debugMode);
   
   res.json(config);
 });

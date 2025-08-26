@@ -42,10 +42,10 @@ class EnvConfig {
     try {
       print('🌐 Making request to /api/config...');
       final response = await http.get(Uri.parse('/api/config'));
-      
+
       print('🌐 Server response status: ${response.statusCode}');
       print('🌐 Server response body: ${response.body}');
-      
+
       if (response.statusCode == 200) {
         _webConfig = json.decode(response.body);
         print(
@@ -53,8 +53,11 @@ class EnvConfig {
         );
         print('🔍 Config values:');
         _webConfig?.forEach((key, value) {
-          if (key.toLowerCase().contains('key') || key.toLowerCase().contains('secret')) {
-            print('  $key: ${value.toString().length > 0 ? "[MASKED ${value.toString().length} chars]" : "[EMPTY]"}');
+          if (key.toLowerCase().contains('key') ||
+              key.toLowerCase().contains('secret')) {
+            print(
+              '  $key: ${value.toString().length > 0 ? "[MASKED ${value.toString().length} chars]" : "[EMPTY]"}',
+            );
           } else {
             print('  $key: $value');
           }
@@ -84,7 +87,7 @@ class EnvConfig {
         print('⚠️ Web config is null for key: $key');
         return fallback ?? '';
       }
-      
+
       // Map API keys to expected environment variable names
       String? value;
       switch (key) {
@@ -93,6 +96,15 @@ class EnvConfig {
           break;
         case 'SUPABASE_ANON_KEY':
           value = _webConfig!['supabaseAnonKey']?.toString();
+          break;
+        case 'OPENAI_API_KEY':
+          value = _webConfig!['openaiApiKey']?.toString();
+          break;
+        case 'MCP_ENDPOINT':
+          value = _webConfig!['mcpEndpoint']?.toString();
+          break;
+        case 'MCP_SECRET':
+          value = _webConfig!['mcpSecret']?.toString();
           break;
         case 'FLUTTER_ENV':
           value = _webConfig!['environment']?.toString();
@@ -103,9 +115,11 @@ class EnvConfig {
         default:
           value = null;
       }
-      
+
       final result = value ?? fallback ?? '';
-      print('🔍 _getEnv($key) -> ${result.isEmpty ? "[EMPTY]" : (key.toLowerCase().contains("key") ? "[MASKED ${result.length} chars]" : result)}');
+      print(
+        '🔍 _getEnv($key) -> ${result.isEmpty ? "[EMPTY]" : (key.toLowerCase().contains("key") ? "[MASKED ${result.length} chars]" : result)}',
+      );
       return result;
     }
 
@@ -131,8 +145,8 @@ class EnvConfig {
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
-  // OpenAI Configuration (Note: Not exposed to web for security)
-  static String get openaiApiKey => kIsWeb ? '' : _getEnv('OPENAI_API_KEY');
+  // OpenAI Configuration
+  static String get openaiApiKey => _getEnv('OPENAI_API_KEY');
 
   /// Check if OpenAI is properly configured
   static bool get isOpenAIConfigured =>
