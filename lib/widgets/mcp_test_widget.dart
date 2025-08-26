@@ -4,6 +4,8 @@ import 'dart:convert';
 import '../services/supabase_service.dart';
 import '../models/user_model.dart';
 import '../config/openai_config.dart';
+import '../services/openai_security.dart';
+import '../services/rate_limiter.dart';
 
 enum TestMode { database, aiMcp }
 
@@ -401,6 +403,22 @@ Always respond as if you're speaking directly to your client in a supportive con
   ) async {
     print('🔄 _callOpenAI called with useCustomPrompt: $useCustomPrompt');
 
+    // 🔒 SECURITY: Rate limiting
+    if (!RateLimiter.canMakeRequest(user.id)) {
+      final waitTime = RateLimiter.getWaitTime(user.id);
+      return 'Rate limit exceeded. Please wait ${waitTime?.inSeconds ?? 60} seconds before making another request.';
+    }
+
+    // 🔒 SECURITY: Input validation
+    final validation = OpenAISecurity.validateInput(question);
+    if (!validation.isValid) {
+      print('🚨 Security: Invalid input - ${validation.message}');
+      return 'Sorry, your question contains invalid content. ${validation.message}';
+    }
+
+    final sanitizedQuestion = OpenAISecurity.sanitizeInput(question);
+    print('🔒 Security: Input validated and sanitized');
+
     // Use environment variable or config for API key in production
     final apiKey = OpenAIConfig.apiKey;
 
@@ -473,8 +491,21 @@ Always respond as if you're speaking directly to your client in a supportive con
               'content': msg.message,
             },
           ),
-      {'role': 'user', 'content': question},
+      {'role': 'user', 'content': sanitizedQuestion}, // Use sanitized input
     ];
+
+    // 🔒 SECURITY: Additional request security
+    final requestBody = {
+      'model': 'gpt-3.5-turbo',
+      'messages': messages,
+      'max_tokens': 300, // Limit response length
+      'temperature': 0.7,
+      'user': user.id, // Track requests by user for OpenAI's safety systems
+    };
+
+    print(
+      '🔒 Security: Making OpenAI request with ${messages.length} messages, max 300 tokens',
+    );
 
     final response = await http.post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
@@ -482,12 +513,7 @@ Always respond as if you're speaking directly to your client in a supportive con
         'Authorization': 'Bearer $apiKey',
         'Content-Type': 'application/json',
       },
-      body: json.encode({
-        'model': 'gpt-3.5-turbo',
-        'messages': messages,
-        'max_tokens': 300,
-        'temperature': 0.7,
-      }),
+      body: json.encode(requestBody),
     );
 
     if (response.statusCode == 200) {

@@ -20,17 +20,29 @@ void main() async {
     if (EnvConfig.debugMode) {
       print('📋 Configuration Summary: ${EnvConfig.getConfigSummary()}');
     }
-    
+
     // Always print configuration status during startup for debugging
     print('🔍 Startup Configuration Status:');
     print('  - Platform: ${kIsWeb ? "Web" : "Native"}');
-    print('  - Environment: ${EnvConfig.isDevelopment ? "Development" : "Production"}');
+    print(
+      '  - Environment: ${EnvConfig.isDevelopment ? "Development" : "Production"}',
+    );
     print('  - Debug Mode: ${EnvConfig.debugMode}');
-    print('  - Supabase URL: ${EnvConfig.supabaseUrl.isNotEmpty ? "Set (${EnvConfig.supabaseUrl.length} chars)" : "NOT SET"}');
-    print('  - Supabase Anon Key: ${EnvConfig.supabaseAnonKey.isNotEmpty ? "Set (${EnvConfig.supabaseAnonKey.length} chars)" : "NOT SET"}');
-    print('  - OpenAI API Key: ${EnvConfig.openaiApiKey.isNotEmpty ? "Set (${EnvConfig.openaiApiKey.length} chars)" : "NOT SET"}');
-    print('  - MCP Endpoint: ${EnvConfig.mcpEndpoint.isNotEmpty ? "Set (${EnvConfig.mcpEndpoint.length} chars)" : "NOT SET"}');
-    print('  - MCP Secret: ${EnvConfig.mcpSecret.isNotEmpty ? "Set (${EnvConfig.mcpSecret.length} chars)" : "NOT SET"}');
+    print(
+      '  - Supabase URL: ${EnvConfig.supabaseUrl.isNotEmpty ? "Set (${EnvConfig.supabaseUrl.length} chars)" : "NOT SET"}',
+    );
+    print(
+      '  - Supabase Anon Key: ${EnvConfig.supabaseAnonKey.isNotEmpty ? "Set (${EnvConfig.supabaseAnonKey.length} chars)" : "NOT SET"}',
+    );
+    print(
+      '  - OpenAI API Key: ${EnvConfig.openaiApiKey.isNotEmpty ? "Set (${EnvConfig.openaiApiKey.length} chars)" : "NOT SET"}',
+    );
+    print(
+      '  - MCP Endpoint: ${EnvConfig.mcpEndpoint.isNotEmpty ? "Set (${EnvConfig.mcpEndpoint.length} chars)" : "NOT SET"}',
+    );
+    print(
+      '  - MCP Secret: ${EnvConfig.mcpSecret.isNotEmpty ? "Set (${EnvConfig.mcpSecret.length} chars)" : "NOT SET"}',
+    );
     print('🔍 Configuration Checks:');
     print('  - Supabase Configured: ${EnvConfig.isSupabaseConfigured}');
     print('  - OpenAI Configured: ${EnvConfig.isOpenAIConfigured}');
@@ -43,13 +55,15 @@ void main() async {
   // Initialize Supabase if configuration is available
   try {
     print('🔄 Main: Checking Supabase configuration...');
-    
+
     // For web platform, give some extra time to ensure config is loaded
     if (kIsWeb) {
       print('🌐 Main: Web platform detected, checking config status...');
-      await Future.delayed(Duration(milliseconds: 100)); // Small delay to ensure config loading
+      await Future.delayed(
+        Duration(milliseconds: 100),
+      ); // Small delay to ensure config loading
     }
-    
+
     if (SupabaseConfig.isConfigured) {
       print('🔄 Main: Supabase config found, initializing...');
       await SupabaseService.initialize();
@@ -76,14 +90,20 @@ void main() async {
   print('🔄 Main: Validating OpenAI configuration...');
   if (OpenAIConfig.isConfigured) {
     print('✅ Main: OpenAI configuration validated');
-    print('📋 OpenAI API Key Length: ${EnvConfig.openaiApiKey.length} characters');
+    print(
+      '📋 OpenAI API Key Length: ${EnvConfig.openaiApiKey.length} characters',
+    );
     if (EnvConfig.debugMode) {
       print('📋 OpenAI Config: ${OpenAIConfig.getConfigSummary()}');
     }
   } else {
     print('⚠️ Main: OpenAI configuration incomplete');
-    print('⚠️ Current OpenAI Key: "${EnvConfig.openaiApiKey}" (length: ${EnvConfig.openaiApiKey.length})');
-    print('⚠️ Is Valid Format: ${EnvConfig.isValidApiKeyFormat(EnvConfig.openaiApiKey)}');
+    print(
+      '⚠️ Current OpenAI Key: "${EnvConfig.openaiApiKey}" (length: ${EnvConfig.openaiApiKey.length})',
+    );
+    print(
+      '⚠️ Is Valid Format: ${EnvConfig.isValidApiKeyFormat(EnvConfig.openaiApiKey)}',
+    );
     print(
       '⚠️ Main: Please check your environment variables and ensure OPENAI_API_KEY is set',
     );
