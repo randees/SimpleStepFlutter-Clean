@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:simple_step_flutter/main.dart' as app;
 import '../../lib/config/supabase_config.dart';
 
 void main() async {
