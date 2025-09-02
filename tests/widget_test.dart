@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:simple_step_flutter/main.dart';
+import 'package:simple_step_flutter/utils/app_icons.dart';
 
 void main() {
   testWidgets('App launches and shows main screen', (
@@ -48,16 +49,17 @@ void main() {
     expect(find.text('Hide Debug Info'), findsOneWidget);
   });
 
-  testWidgets('MCP test widget navigation works', (WidgetTester tester) async {
+  testWidgets('Goal setting agent navigation works', (
+    WidgetTester tester,
+  ) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
+
+    // Tap the API icon to open goal setting agent
+    await tester.tap(find.byIcon(AppIcons.brain()));
     await tester.pumpAndSettle();
 
-    // Tap the API icon to open MCP test widget
-    await tester.tap(find.byIcon(Icons.api));
-    await tester.pumpAndSettle();
-
-    // Verify that the MCP Test Widget screen is shown
-    expect(find.text('MCP Test Widget'), findsOneWidget);
+    // Verify that the Goal Setting Agent screen is shown
+    expect(find.text('Goal Setting Agent'), findsOneWidget);
   });
 }

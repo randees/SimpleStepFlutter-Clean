@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
+import '../services/mcp_client_service.dart';
 import '../models/user_model.dart';
-import '../utils/app_icons.dart';
+import '../models/openai_function.dart';
 import '../config/openai_config.dart';
 
 class ChatMessage {
@@ -18,7 +20,7 @@ class ChatMessage {
   });
 }
 
-/// AI/MCP Testing page - Test OpenAI integration with custom prompts and user context
+/// Goal Setting Agent page - AI-powered goal planning with OpenAI integration
 class AIMCPTestPage extends StatefulWidget {
   const AIMCPTestPage({super.key});
 
@@ -31,15 +33,19 @@ class _AIMCPTestPageState extends State<AIMCPTestPage> {
   UserModel? _selectedUser;
   final TextEditingController _questionController = TextEditingController();
   final TextEditingController _customPromptController = TextEditingController();
+  final ScrollController _conversationScrollController = ScrollController();
   List<ChatMessage> _conversationHistory = [];
   bool _isAiProcessing = false;
   bool _isHistoryExpanded = false;
   List<UserModel> _users = [];
   bool _isLoading = false;
 
+  // MCP service for health data access
+  MCPClientService? _mcpService;
+
   // Default system prompt
   static const String _defaultSystemPrompt =
-      '''You are a certified health provider and fitness trainer who cares deeply about helping people improve their health and wellness. You have access to detailed health data through MCP (Model Context Protocol) tools.
+      '''You are a certified health provider and fitness trainer who cares deeply about helping people improve their health and wellness. You have access to detailed health data through MCP (Model Context Protocol) tools that can fetch real health information from Supabase.
 
 Your personality and approach:
 - Speak in a warm, encouraging, and professional tone
@@ -50,23 +56,39 @@ Your personality and approach:
 - Use "you" and "your" to make responses personal and engaging
 - Include practical tips and suggestions for better health outcomes
 
+IMPORTANT: You have access to the following health data tools:
+1. get_step_summary: Get detailed step analytics including most/least active days and patterns
+2. get_activity_patterns: Get weekly activity patterns and trends
+
+CRITICAL USER IDENTIFICATION FOR MCP FUNCTIONS:
+- Primary User ID (UUID): {user_id}
+- Fallback User Email: {user_email}
+- When calling MCP functions, always use the UUID ({user_id}) as the userId parameter
+- If UUID fails, the system will automatically fall back to email resolution
+
+IMPORTANT DATE CONTEXT:
+- Today's date: {current_date}
+- When users ask for recent data, use the last 30 days from today
+- When users ask for broad historical data, use from beginning of time (earliest available data) to today
+- Always default to current and recent data unless told otherwise
+
 Current client context:
 - Name: {user_name}
 - Email: {user_email}
+- User ID: {user_id}
 - Age: {user_age}
 - Activity Level: {user_activity_level}
 - Health Goals: {user_health_goals}
 
-You can access their health data using our Supabase Edge Functions at:
-- Base URL: https://YOUR-PROJECT-ID.supabase.co/functions/v1/mcp-server
+When users ask about their health data, step counts, activity patterns, or fitness progress, you MUST call the appropriate function to get their actual data before providing advice. Don't make assumptions - always fetch real data first.
 
 Use a ReAct (Reasoning and Acting) approach:
 1. Think about what health data you need to provide the best guidance
-2. Act by calling the appropriate endpoint to retrieve their data
+2. Act by calling the appropriate function (get_step_summary or get_activity_patterns)
 3. Observe the results and analyze patterns
-4. Provide encouraging, actionable health advice as their personal trainer/health provider
+4. Provide encouraging, actionable health advice based on their REAL data
 
-Always respond as if you're speaking directly to your client in a supportive consultation. Keep responses under 1000 characters. Maximum 5 attempts to formulate a response.''';
+Always respond as if you're speaking directly to your client in a supportive consultation. Keep responses under 1000 characters when possible.''';
 
   @override
   void initState() {
@@ -81,6 +103,7 @@ Always respond as if you're speaking directly to your client in a supportive con
   void dispose() {
     _questionController.dispose();
     _customPromptController.dispose();
+    _conversationScrollController.dispose();
     super.dispose();
   }
 
@@ -100,6 +123,22 @@ Always respond as if you're speaking directly to your client in a supportive con
         // Reset selected user to the first user from the new list
         _selectedUser = users.isNotEmpty ? users.first : null;
         _isLoading = false;
+
+        // Initialize MCP service for the default user
+        if (_selectedUser != null) {
+          _mcpService = MCPClientService(userId: _selectedUser!.id);
+          _mcpService!.initialize().then((success) {
+            if (success) {
+              print(
+                '✅ MCP service initialized for default user: ${_selectedUser!.friendlyName}',
+              );
+            } else {
+              print(
+                '❌ Failed to initialize MCP service for default user: ${_selectedUser!.friendlyName}',
+              );
+            }
+          });
+        }
       });
       print('✅ Loaded ${users.length} users for AI testing');
     } catch (e) {
@@ -146,8 +185,35 @@ Always respond as if you're speaking directly to your client in a supportive con
         _users = mockUsers;
         _selectedUser = mockUsers.first;
         _isLoading = false;
+
+        // Initialize MCP service for the mock user
+        _mcpService = MCPClientService(userId: _selectedUser!.id);
+        _mcpService!.initialize().then((success) {
+          if (success) {
+            print(
+              '✅ MCP service initialized for mock user: ${_selectedUser!.friendlyName}',
+            );
+          } else {
+            print(
+              '❌ Failed to initialize MCP service for mock user: ${_selectedUser!.friendlyName}',
+            );
+          }
+        });
       });
       print('⚠️ Using mock users for AI testing (network unavailable)');
+    }
+  }
+
+  /// Scroll to the bottom of conversation history
+  void _scrollToBottom() {
+    if (_conversationScrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _conversationScrollController.animateTo(
+          _conversationScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
     }
   }
 
@@ -188,6 +254,9 @@ Always respond as if you're speaking directly to your client in a supportive con
         ChatMessage(message: question, isUser: true, timestamp: DateTime.now()),
       );
 
+      // Clear the question input field
+      _questionController.clear();
+
       final systemPrompt = _buildSystemPromptWithUserContext(
         _selectedUser!,
         customPrompt,
@@ -204,6 +273,9 @@ Always respond as if you're speaking directly to your client in a supportive con
         ),
       );
 
+      // Scroll to bottom to show new message
+      _scrollToBottom();
+
       print('✅ Custom AI response received successfully');
     } catch (e) {
       print('❌ Error with custom AI request: $e');
@@ -215,6 +287,9 @@ Always respond as if you're speaking directly to your client in a supportive con
           timestamp: DateTime.now(),
         ),
       );
+
+      // Scroll to bottom to show new message
+      _scrollToBottom();
     } finally {
       setState(() {
         _isAiProcessing = false;
@@ -249,6 +324,9 @@ Always respond as if you're speaking directly to your client in a supportive con
         ChatMessage(message: question, isUser: true, timestamp: DateTime.now()),
       );
 
+      // Clear the question input field
+      _questionController.clear();
+
       final systemPrompt = _buildSystemPromptWithUserContext(
         _selectedUser!,
         _defaultSystemPrompt,
@@ -265,6 +343,9 @@ Always respond as if you're speaking directly to your client in a supportive con
         ),
       );
 
+      // Scroll to bottom to show new message
+      _scrollToBottom();
+
       print('✅ AI response received successfully');
     } catch (e) {
       print('❌ Error with AI request: $e');
@@ -276,6 +357,9 @@ Always respond as if you're speaking directly to your client in a supportive con
           timestamp: DateTime.now(),
         ),
       );
+
+      // Scroll to bottom to show new message
+      _scrollToBottom();
     } finally {
       setState(() {
         _isAiProcessing = false;
@@ -285,9 +369,12 @@ Always respond as if you're speaking directly to your client in a supportive con
 
   /// Build system prompt with user context
   String _buildSystemPromptWithUserContext(UserModel user, String basePrompt) {
-    return basePrompt
+    final currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final finalPrompt = basePrompt
+        .replaceAll('{current_date}', currentDate)
         .replaceAll('{user_name}', user.friendlyName)
         .replaceAll('{user_email}', user.email)
+        .replaceAll('{user_id}', user.id)
         .replaceAll(
           '{user_age}',
           user.dateOfBirth != null
@@ -299,9 +386,16 @@ Always respond as if you're speaking directly to your client in a supportive con
           '{user_health_goals}',
           user.healthGoals?.join(', ') ?? 'None specified',
         );
+
+    print('🔍 Final System Prompt:');
+    print('📝 User UUID: ${user.id}');
+    print('📧 User Email: ${user.email}');
+    print('👤 User Name: ${user.friendlyName}');
+    print('📄 Full System Prompt:\n$finalPrompt');
+    return finalPrompt;
   }
 
-  /// Call OpenAI API with system prompt and user question
+  /// Call OpenAI API with ReAct pattern and MCP function calling
   Future<String> _callOpenAI(String userMessage, String systemPrompt) async {
     final apiKey = OpenAIConfig.apiKey;
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
@@ -315,434 +409,564 @@ Always respond as if you're speaking directly to your client in a supportive con
       return 'Error: Invalid OpenAI API key format. Please check your OPENAI_API_KEY in the .env file.';
     }
 
+    if (_mcpService == null) {
+      return 'Error: No user selected for health data access. Please select a user first.';
+    }
+
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $apiKey',
     };
 
-    final body = json.encode({
-      'model': 'gpt-3.5-turbo',
-      'messages': [
-        {'role': 'system', 'content': systemPrompt},
-        {'role': 'user', 'content': userMessage},
-      ],
-      'max_tokens': 500,
-      'temperature': 0.7,
-    });
+    // Define available tools for OpenAI (using the new tools format)
+    final tools = StepAnalyticsFunctions.getAllFunctions()
+        .map((f) => {'type': 'function', 'function': f.toJson()})
+        .toList();
+
+    // Initial conversation with system prompt and user message
+    List<Map<String, dynamic>> messages = [
+      {'role': 'system', 'content': systemPrompt},
+      {'role': 'user', 'content': userMessage},
+    ];
 
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: headers,
-        body: body,
-      );
+      // Start ReAct conversation loop (max 5 iterations to prevent infinite loops)
+      for (int iteration = 0; iteration < 5; iteration++) {
+        print('🔄 ReAct iteration ${iteration + 1}');
 
-      if (response.statusCode == 200) {
+        final body = json.encode({
+          'model': 'gpt-3.5-turbo',
+          'messages': messages,
+          'tools': tools,
+          'tool_choice': 'auto',
+          'max_tokens': 500,
+          'temperature': 0.7,
+        });
+
+        final response = await http.post(
+          Uri.parse(apiUrl),
+          headers: headers,
+          body: body,
+        );
+
+        if (response.statusCode != 200) {
+          print('OpenAI API Error: ${response.statusCode} - ${response.body}');
+          return 'Error: Unable to get AI response. Status: ${response.statusCode}';
+        }
+
         final data = json.decode(response.body);
-        return data['choices'][0]['message']['content'] ?? 'No response';
-      } else {
-        print('OpenAI API Error: ${response.statusCode} - ${response.body}');
-        return 'Error: Unable to get AI response. Status: ${response.statusCode}';
+        final choice = data['choices'][0];
+        final message = choice['message'];
+
+        // Add AI response to conversation
+        messages.add(message);
+
+        // Check if AI wants to call a tool
+        if (message['tool_calls'] != null && message['tool_calls'].isNotEmpty) {
+          final toolCalls = message['tool_calls'] as List;
+
+          // Process each tool call
+          for (final toolCall in toolCalls) {
+            final toolCallId = toolCall['id'];
+            final function = toolCall['function'];
+            final functionName = function['name'];
+            final functionArgs = json.decode(function['arguments']);
+
+            print(
+              '🔧 AI is calling function: $functionName with args: $functionArgs',
+            );
+
+            // Call the appropriate MCP function
+            String functionResult = await _executeMCPFunction(
+              functionName,
+              functionArgs,
+            );
+
+            // Add function result to conversation
+            messages.add({
+              'role': 'tool',
+              'tool_call_id': toolCallId,
+              'content': functionResult,
+            });
+
+            print(
+              '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
+            );
+          }
+        } else {
+          // AI provided final response without tool call
+          final finalResponse = message['content'] ?? 'No response';
+          print('✅ AI provided final response');
+          return finalResponse;
+        }
       }
+
+      return 'I gathered some health data but ran into processing limits. Please try asking a more specific question.';
     } catch (e) {
       print('Network Error: $e');
       return 'Error: Network issue connecting to AI service.';
     }
   }
 
+  /// Execute MCP function based on function name and arguments
+  Future<String> _executeMCPFunction(
+    String functionName,
+    Map<String, dynamic> args,
+  ) async {
+    if (_mcpService == null) {
+      return 'Error: MCP service not initialized';
+    }
+
+    try {
+      switch (functionName) {
+        case 'get_step_summary':
+          // Call MCP directly for OpenAI function calls
+          return await _mcpService!.callMCPFunctionForOpenAI(
+            functionName,
+            args,
+          );
+
+        case 'get_activity_patterns':
+          // Call MCP directly for OpenAI function calls
+          return await _mcpService!.callMCPFunctionForOpenAI(
+            functionName,
+            args,
+          );
+
+        default:
+          return 'Unknown function: $functionName';
+      }
+    } catch (e) {
+      print('❌ Error executing MCP function $functionName: $e');
+      return 'Error executing $functionName: $e';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI/MCP Testing'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: SingleChildScrollView(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 900;
+
+    return isWideScreen
+        ? _buildWideLayoutWithHeight(context)
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildNarrowLayout(),
+          );
+  }
+
+  /// Build wide layout with bounded height
+  Widget _buildWideLayoutWithHeight(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Calculate available height (screen height minus app bar and padding)
+    final availableHeight =
+        screenHeight - kToolbarHeight - 32; // 32 for padding
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(height: availableHeight, child: _buildWideLayout()),
+    );
+  }
+
+  /// Build layout for narrow screens (mobile/tablet)
+  Widget _buildNarrowLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildUserSelectionCard(),
+        const SizedBox(height: 16),
+        _buildConversationHistoryCard(),
+        const SizedBox(height: 16),
+        _buildQuestionInputCard(),
+        const SizedBox(height: 16),
+        _buildCustomPromptCard(),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  /// Build layout for wide screens (desktop)
+  Widget _buildWideLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left column - User selection and custom prompt
+        Expanded(
+          flex: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildUserSelectionCard(),
+              const SizedBox(height: 16),
+              Expanded(child: _buildCustomPromptCard()),
+            ],
+          ),
+        ),
+        const SizedBox(width: 24),
+        // Right column - Conversation history and question input
+        Expanded(
+          flex: 1,
+          child: Column(
+            children: [
+              Expanded(child: _buildConversationHistoryCard()),
+              const SizedBox(height: 16),
+              _buildQuestionInputCard(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build user selection card
+  Widget _buildUserSelectionCard() {
+    return Card(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Card
-            Card(
-              color: Colors.purple.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          AppIcons.brain(),
-                          color: Colors.purple.shade700,
-                          size: 24,
+            const Text(
+              'Select User Context:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            if (_users.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  border: Border.all(color: Colors.orange.shade200),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'Loading users... If this persists, check network connectivity.',
+                  style: TextStyle(fontSize: 12, color: Colors.orange),
+                ),
+              )
+            else
+              Text(
+                'Found ${_users.length} users available',
+                style: TextStyle(fontSize: 12, color: Colors.green.shade600),
+              ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<UserModel>(
+              value: _users.contains(_selectedUser) ? _selectedUser : null,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              hint: _users.isEmpty
+                  ? const Text('Loading users...')
+                  : const Text('Choose a user for context'),
+              items: _users.isEmpty
+                  ? []
+                  : _users.map((user) {
+                      return DropdownMenuItem<UserModel>(
+                        value: user,
+                        child: Text(
+                          '${user.friendlyName} (${user.activityLevel ?? 'Unknown'})',
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'AI/MCP Testing',
+                      );
+                    }).toList(),
+              onChanged: (UserModel? newValue) {
+                setState(() {
+                  _selectedUser = newValue;
+                  // Initialize MCP service for the selected user
+                  if (newValue != null) {
+                    _mcpService = MCPClientService(userId: newValue.id);
+                    _mcpService!.initialize().then((success) {
+                      if (success) {
+                        print(
+                          '✅ MCP service initialized for user: ${newValue.friendlyName}',
+                        );
+                      } else {
+                        print(
+                          '❌ Failed to initialize MCP service for user: ${newValue.friendlyName}',
+                        );
+                      }
+                    });
+                  } else {
+                    _mcpService = null;
+                  }
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build question input card
+  Widget _buildQuestionInputCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Ask a Question:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _questionController.clear();
+                    });
+                  },
+                  icon: const Icon(Icons.clear, size: 20),
+                  tooltip: 'Clear question',
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.grey.shade200,
+                    foregroundColor: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _questionController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'e.g., "How is my step count progress this week?"',
+                contentPadding: EdgeInsets.all(12),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isAiProcessing || _selectedUser == null
+                        ? null
+                        : _submitQuestion,
+                    child: _isAiProcessing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Ask AI'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isAiProcessing || _selectedUser == null
+                        ? null
+                        : _submitQuestionCustom,
+                    icon: const Icon(Icons.psychology, size: 16),
+                    label: const Text('Ask AI Custom'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple.shade100,
+                      foregroundColor: Colors.purple.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build custom prompt card
+  Widget _buildCustomPromptCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Custom System Prompt:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _resetCustomPrompt,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Reset'),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.grey.shade200,
+                    foregroundColor: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: TextField(
+                controller: _customPromptController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter your custom system prompt...',
+                  contentPadding: EdgeInsets.all(12),
+                ),
+                maxLines: null,
+                expands: true,
+                textAlignVertical: TextAlignVertical.top,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build conversation history card
+  Widget _buildConversationHistoryCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Conversation History:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                if (_conversationHistory.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _conversationHistory.clear();
+                      });
+                    },
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Clear'),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.red.shade100,
+                      foregroundColor: Colors.red.shade700,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _isHistoryExpanded = !_isHistoryExpanded;
+                    });
+                  },
+                  icon: Icon(
+                    _isHistoryExpanded ? Icons.expand_less : Icons.expand_more,
+                  ),
+                  tooltip: _isHistoryExpanded
+                      ? 'Collapse history'
+                      : 'Expand history',
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _conversationHistory.isEmpty
+                  ? Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'No conversation yet. Ask a question to get started!',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple.shade700,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Test OpenAI integration with custom prompts and user context. Uses ReAct (Reasoning and Acting) approach for health data analysis.',
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // User Selection
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Select User Context:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    // Debug info for users
-                    if (_users.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          border: Border.all(color: Colors.orange.shade200),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'Loading users... If this persists, check network connectivity.',
-                          style: TextStyle(fontSize: 12, color: Colors.orange),
-                        ),
-                      )
-                    else
-                      Text(
-                        'Found ${_users.length} users available',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green.shade600,
                         ),
                       ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<UserModel>(
-                      value: _users.contains(_selectedUser)
-                          ? _selectedUser
-                          : null,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      hint: _users.isEmpty
-                          ? const Text('Loading users...')
-                          : const Text('Choose a user for context'),
-                      items: _users.isEmpty
-                          ? []
-                          : _users.map((user) {
-                              return DropdownMenuItem<UserModel>(
-                                value: user,
-                                child: Text(
-                                  '${user.friendlyName} (${user.activityLevel ?? 'Unknown'})',
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              );
-                            }).toList(),
-                      onChanged: (UserModel? newValue) {
-                        setState(() {
-                          _selectedUser = newValue;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Question input area
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Ask a Question:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _questionController.clear();
-                            });
-                          },
-                          icon: const Icon(Icons.clear, size: 20),
-                          tooltip: 'Clear question',
-                          padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.grey.shade200,
-                            foregroundColor: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _questionController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText:
-                            'e.g., "How is my step count progress this week?"',
-                        contentPadding: EdgeInsets.all(12),
-                      ),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _isAiProcessing || _selectedUser == null
-                                ? null
-                                : _submitQuestion,
-                            child: _isAiProcessing
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Ask AI'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _isAiProcessing || _selectedUser == null
-                                ? null
-                                : _submitQuestionCustom,
-                            icon: const Icon(Icons.psychology, size: 16),
-                            label: const Text('Ask AI Custom'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.purple.shade100,
-                              foregroundColor: Colors.purple.shade700,
+                      child: ListView.builder(
+                        controller: _conversationScrollController,
+                        itemCount: _conversationHistory.length,
+                        itemBuilder: (context, index) {
+                          final message = _conversationHistory[index];
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 8,
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Custom Prompt Section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Custom System Prompt:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        TextButton.icon(
-                          onPressed: _resetCustomPrompt,
-                          icon: const Icon(Icons.refresh, size: 16),
-                          label: const Text('Reset'),
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.grey.shade200,
-                            foregroundColor: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _customPromptController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your custom system prompt...',
-                        contentPadding: EdgeInsets.all(12),
-                      ),
-                      maxLines: 8,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Conversation History
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Conversation History:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        if (_conversationHistory.isNotEmpty)
-                          TextButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _conversationHistory.clear();
-                              });
-                            },
-                            icon: const Icon(Icons.delete, size: 16),
-                            label: const Text('Clear'),
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.red.shade100,
-                              foregroundColor: Colors.red.shade700,
-                            ),
-                          ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _isHistoryExpanded = !_isHistoryExpanded;
-                            });
-                          },
-                          icon: Icon(
-                            _isHistoryExpanded
-                                ? Icons.expand_less
-                                : Icons.expand_more,
-                          ),
-                          tooltip: _isHistoryExpanded
-                              ? 'Collapse history'
-                              : 'Expand history',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    if (_conversationHistory.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          border: Border.all(color: Colors.grey.shade200),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'No conversation yet. Ask a question to get started!',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        height: _isHistoryExpanded ? 400 : 200,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ListView.builder(
-                          itemCount: _conversationHistory.length,
-                          itemBuilder: (context, index) {
-                            final message = _conversationHistory[index];
-                            return Container(
-                              margin: const EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 8,
-                              ),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: message.isUser
+                                  ? Colors.blue.shade50
+                                  : Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
                                 color: message.isUser
-                                    ? Colors.blue.shade50
-                                    : Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: message.isUser
-                                      ? Colors.blue.shade200
-                                      : Colors.green.shade200,
-                                ),
+                                    ? Colors.blue.shade200
+                                    : Colors.green.shade200,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        message.isUser
-                                            ? Icons.person
-                                            : Icons.psychology,
-                                        size: 16,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      message.isUser
+                                          ? Icons.person
+                                          : Icons.psychology,
+                                      size: 16,
+                                      color: message.isUser
+                                          ? Colors.blue.shade600
+                                          : Colors.green.shade600,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      message.isUser ? 'You' : 'AI Assistant',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
                                         color: message.isUser
                                             ? Colors.blue.shade600
                                             : Colors.green.shade600,
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        message.isUser ? 'You' : 'AI Assistant',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: message.isUser
-                                              ? Colors.blue.shade600
-                                              : Colors.green.shade600,
-                                        ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
                                       ),
-                                      const Spacer(),
-                                      Text(
-                                        '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(message.message),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(message.message),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                  ],
-                ),
-              ),
+                    ),
             ),
-
-            const SizedBox(height: 20),
           ],
         ),
       ),

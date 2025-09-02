@@ -97,194 +97,262 @@ class _DatabaseTestPageState extends State<DatabaseTestPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 900;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
+        child: isWideScreen ? _buildWideLayout() : _buildNarrowLayout(),
+      ),
+    );
+  }
+
+  /// Build layout for narrow screens (mobile/tablet)
+  Widget _buildNarrowLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Status Card
+        _buildStatusCard(),
+        const SizedBox(height: 16),
+        // Action Buttons
+        _buildActionButtons(),
+        const SizedBox(height: 16),
+        // Debug Output
+        _buildDebugOutputSection(),
+      ],
+    );
+  }
+
+  /// Build layout for wide screens (desktop)
+  Widget _buildWideLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left column - Status and Controls
+        Expanded(
+          flex: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildStatusCard(),
+              const SizedBox(height: 16),
+              _buildActionButtons(),
+              const SizedBox(height: 16),
+              // User list for wide screens
+              _buildUsersList(),
+            ],
+          ),
+        ),
+        const SizedBox(width: 24),
+        // Right column - Debug Output
+        Expanded(flex: 2, child: _buildDebugOutputSection()),
+      ],
+    );
+  }
+
+  /// Build status card widget
+  Widget _buildStatusCard() {
+    return Card(
+      color: _lastError != null
+          ? Colors.red.shade50
+          : _userCount > 0
+          ? Colors.green.shade50
+          : Colors.orange.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header info
-            Card(
-              color: Colors.blue.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          AppIcons.database(),
-                          color: Colors.blue.shade700,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Database Connection Tester',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Test Supabase database connectivity and user data access.',
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Status Card
-            Card(
-              color: _lastError != null
-                  ? Colors.red.shade50
-                  : _userCount > 0
-                  ? Colors.green.shade50
-                  : Colors.orange.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          _lastError != null
-                              ? AppIcons.error()
-                              : _userCount > 0
-                              ? AppIcons.checkCircle()
-                              : AppIcons.warning(),
-                          color: _lastError != null
-                              ? Colors.red.shade700
-                              : _userCount > 0
-                              ? Colors.green.shade700
-                              : Colors.orange.shade700,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _lastError != null
-                              ? 'Connection Failed'
-                              : _userCount > 0
-                              ? 'Connected Successfully'
-                              : 'Testing Connection...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: _lastError != null
-                                ? Colors.red.shade700
-                                : _userCount > 0
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'User Count: $_userCount',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (_lastError != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Last Error: $_lastError',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red.shade600,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Action Buttons
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _retryTest,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(AppIcons.refresh()),
-                    label: Text(_isLoading ? 'Testing...' : 'Test Database'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
+                Icon(
+                  _lastError != null
+                      ? AppIcons.error()
+                      : _userCount > 0
+                      ? AppIcons.checkCircle()
+                      : AppIcons.warning(),
+                  color: _lastError != null
+                      ? Colors.red.shade700
+                      : _userCount > 0
+                      ? Colors.green.shade700
+                      : Colors.orange.shade700,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _debugOutput = 'Debug output cleared...';
-                        _lastError = null;
-                      });
-                    },
-                    icon: Icon(AppIcons.clear()),
-                    label: const Text('Clear Log'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                const SizedBox(width: 8),
+                Text(
+                  _lastError != null
+                      ? 'Connection Failed'
+                      : _userCount > 0
+                      ? 'Connected Successfully'
+                      : 'Testing Connection...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _lastError != null
+                        ? Colors.red.shade700
+                        : _userCount > 0
+                        ? Colors.green.shade700
+                        : Colors.orange.shade700,
                   ),
                 ),
               ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Debug Output
-            const Text(
-              'Debug Output:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            const SizedBox(height: 12),
+            Text(
+              'User Count: $_userCount',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey.shade50,
+            if (_lastError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Last Error: $_lastError',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red.shade600,
+                  fontFamily: 'monospace',
                 ),
-                child: SingleChildScrollView(
-                  child: Text(
-                    _debugOutput,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 12,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build action buttons widget
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _isLoading ? null : _retryTest,
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(AppIcons.refresh()),
+            label: Text(_isLoading ? 'Testing...' : 'Test Database'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              setState(() {
+                _debugOutput = 'Debug output cleared...';
+                _lastError = null;
+              });
+            },
+            icon: Icon(AppIcons.clear()),
+            label: const Text('Clear Log'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build users list for wide screen layout
+  Widget _buildUsersList() {
+    if (_users.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'No users loaded yet',
+            style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Connected Users ($_userCount)',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 200,
+              child: ListView.builder(
+                itemCount: _users.length,
+                itemBuilder: (context, index) {
+                  final user = _users[index];
+                  return ListTile(
+                    dense: true,
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blue.shade100,
+                      child: Text(
+                        user.friendlyName.substring(0, 1).toUpperCase(),
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                    title: Text(
+                      user.friendlyName,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Text(
+                      '${user.activityLevel ?? 'Unknown'} • ${user.email}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  /// Build debug output section
+  Widget _buildDebugOutputSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Debug Output:',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey.shade50,
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                _debugOutput,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

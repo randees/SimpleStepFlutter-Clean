@@ -101,7 +101,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       if (_currentMode == TestMode.database) {
         _currentMode = TestMode.aiMcp;
         _debugOutput =
-            'AI/MCP Testing Mode\n\nReAct interface for health data analysis.';
+            'Goal Setting Agent Mode\n\nAI-powered goal planning for health and wellness.';
         _lastError = null;
         _userCount = 0;
         _isLoading = false;
@@ -565,7 +565,7 @@ Always respond as if you're speaking directly to your client in a supportive con
             icon: const Icon(Icons.settings),
             onPressed: _switchTestMode,
             tooltip: _currentMode == TestMode.database
-                ? 'Switch to AI/MCP Testing'
+                ? 'Switch to Goal Setting Agent'
                 : 'Switch to Database Testing',
           ),
         ],
@@ -722,7 +722,7 @@ Always respond as if you're speaking directly to your client in a supportive con
     );
   }
 
-  /// Build the AI/MCP testing interface
+  /// Build the Goal Setting Agent interface
   Widget _buildAiMcpTestView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 20),

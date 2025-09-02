@@ -31,4 +31,4 @@ chmod +x test/scripts/*.sh
 - curl (for HTTP requests)
 - jq (for JSON processing, optional but recommended)
 - Valid Supabase configuration
-- MCP server running (for MCP tests)
+- MCP server running (for Goal Setting Agent tests)

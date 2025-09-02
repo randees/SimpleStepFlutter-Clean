@@ -26,10 +26,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const mcpSecret = Deno.env.get('MCP_SERVER_SECRET')!
 
-    // Validate MCP secret for OpenAI requests
+    // For MCP requests, we only validate the MCP secret, not Supabase JWT
+    // This allows OpenAI to call our server with just the MCP secret
     if (!validateMCPSecret(req, mcpSecret)) {
       return new Response(
-        JSON.stringify({ error: { code: 401, message: 'Unauthorized' } }),
+        JSON.stringify({ error: { code: 401, message: 'Invalid MCP secret' } }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -115,10 +116,11 @@ async function handleToolsList(): Promise<MCPResponse> {
           inputSchema: {
             type: "object",
             properties: {
+              userId: { type: "string", description: "User ID to analyze" },
               startDate: { type: "string", format: "date" },
               endDate: { type: "string", format: "date" }
             },
-            required: ["startDate", "endDate"]
+            required: ["userId", "startDate", "endDate"]
           }
         },
         {
@@ -127,9 +129,10 @@ async function handleToolsList(): Promise<MCPResponse> {
           inputSchema: {
             type: "object",
             properties: {
+              userId: { type: "string", description: "User ID to analyze" },
               days: { type: "number", default: 30 }
             },
-            required: []
+            required: ["userId"]
           }
         }
       ]
@@ -147,10 +150,19 @@ async function handleToolCall(
   try {
     switch (name) {
       case 'get_step_summary':
+        if (!args.userId) {
+          return {
+            error: {
+              code: -32602,
+              message: 'userId parameter is required for step summary'
+            }
+          }
+        }
+        
         const summary = await getStepSummary(
           supabaseUrl,
           supabaseKey,
-          '', // userId not needed for step_data table
+          args.userId, // Use userId from function arguments
           args.startDate,
           args.endDate
         )
@@ -183,9 +195,19 @@ ${Object.entries(summary.weeklyPattern)
         }
       
       case 'get_activity_patterns':
+        if (!args.userId) {
+          return {
+            error: {
+              code: -32602,
+              message: 'userId parameter is required for activity patterns'
+            }
+          }
+        }
+        
         const patterns = await getActivityPatterns(
           supabaseUrl,
           supabaseKey,
+          args.userId, // Use userId from function arguments
           args.days || 30
         )
         

@@ -7,7 +7,7 @@ import '../utils/app_icons.dart';
 /// Home screen with hamburger menu navigation to three main pages:
 /// 1. Step Counter (health data and sync)
 /// 2. Database Connection Tester (Supabase connectivity)
-/// 3. AI/MCP Test (OpenAI integration with custom prompts)
+/// 3. Goal Setting Agent (OpenAI integration with custom prompts)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 2; // Default to AI/MCP Test page
+  int _selectedIndex = 2; // Default to Goal Setting Agent page
 
   final List<Widget> _pages = [
     const StepCounterPage(),
@@ -27,15 +27,60 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> _pageTitles = [
     'Step Counter',
     'Database Test',
-    'AI/MCP Test',
+    'Goal Setting Agent',
+  ];
+
+  final List<String> _pageDescriptions = [
+    'Health data & sync',
+    'Test Supabase database connectivity and user data access',
+    'AI-powered goal planning with OpenAI integration using ReAct approach',
+  ];
+
+  final List<IconData> _pageIcons = [
+    AppIcons.walk(),
+    AppIcons.database(),
+    AppIcons.brain(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_pageTitles[_selectedIndex]),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  _pageIcons[_selectedIndex],
+                  size: 24,
+                  color: _selectedIndex == 1
+                      ? Colors.blue.shade700
+                      : _selectedIndex == 2
+                      ? Colors.purple.shade700
+                      : Colors.green.shade700,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _pageTitles[_selectedIndex],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              _pageDescriptions[_selectedIndex],
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        toolbarHeight: 80, // Increased height to accommodate description
       ),
       drawer: Drawer(
         child: ListView(
@@ -101,8 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 AppIcons.brain(),
                 color: _selectedIndex == 2 ? Colors.purple : Colors.grey,
               ),
-              title: const Text('AI/MCP Test'),
-              subtitle: const Text('OpenAI with custom prompts'),
+              title: const Text('Goal Setting Agent'),
+              subtitle: const Text('AI-powered goal planning'),
               selected: _selectedIndex == 2,
               onTap: () {
                 setState(() {
