@@ -7,7 +7,7 @@
 - ✅ **Updated SupabaseConfig** to use environment variables instead of hardcoded values  
 - ✅ **Updated OpenAIConfig** to use environment variables instead of hardcoded values
 - ✅ **Updated main.dart** to initialize environment configuration
-- ✅ **Updated AI/MCP test page** to use secure OpenAI API key from environment
+- ✅ **Updated Goal Setting Agent page** to use secure OpenAI API key from environment
 - ✅ **Added flutter_dotenv package** for .env file support
 - ✅ **Added .env to pubspec.yaml assets** for environment loading
 - ✅ **Created .env.example** with placeholder values for documentation

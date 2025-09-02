@@ -1,0 +1,58 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Node.js Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/simple-server.js",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Flutter Web (Debug with Env)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--debug",
+        "--dart-define-from-file=.env",
+        "--web-hostname",
+        "localhost",
+        "--web-port",
+        "8080"
+      ]
+    },
+    {
+      "name": "Flutter Web (Simple Debug)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--debug",
+        "--dart-define=SUPABASE_URL=https://dnfynvksdckwoedlqguj.supabase.co",
+        "--dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuZnludmtzZGNrd29lZGxxZ3VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzU5OTIsImV4cCI6MjA3MTIxMTk5Mn0.ef7DpGOUCVoGBG9yMCjtsLs4E0YXsT_c7H_cO4uE8Sk",
+        "--dart-define=OPENAI_API_KEY=${env:OPENAI_API_KEY}",
+        "--web-hostname",
+        "localhost",
+        "--web-port",
+        "8080"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 Full Stack Debug (Node.js + Flutter)",
+      "configurations": [
+        "Node.js Server",
+        "Flutter Web (Debug with Env)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

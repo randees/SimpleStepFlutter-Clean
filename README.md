@@ -85,7 +85,7 @@ See [SECURITY_SETUP.md](SECURITY_SETUP.md) for detailed security guidelines.
 ## ��� Documentation
 
 - [Security Setup Guide](SECURITY_SETUP.md)
-- [MCP Testing Guide](Docs/MCP_TESTING_GUIDE.md)
+- [Goal Setting Agent Testing Guide](docs/MCP_TESTING_GUIDE.md)
 - [Health Connect Testing](Docs/HEALTH_CONNECT_TESTING_GUIDE.md)
 - [Project Overview](Docs/project_overview.md)
 

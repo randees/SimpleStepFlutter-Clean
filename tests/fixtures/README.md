@@ -4,7 +4,7 @@ This directory contains JSON configuration files and test data used by the test 
 
 ## Files:
 
-### MCP Test Fixtures
+### Goal Setting Agent Test Fixtures
 - `test_initialize.json` - MCP server initialization test data
 - `test_tools_list.json` - Available tools list test data  
 - `test_activity_patterns.json` - Activity patterns test data
