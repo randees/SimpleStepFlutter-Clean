@@ -35,8 +35,8 @@
       "deviceId": "chrome",
       "args": [
         "--debug",
-        "--dart-define=SUPABASE_URL=https://dnfynvksdckwoedlqguj.supabase.co",
-        "--dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuZnludmtzZGNrd29lZGxxZ3VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzU5OTIsImV4cCI6MjA3MTIxMTk5Mn0.ef7DpGOUCVoGBG9yMCjtsLs4E0YXsT_c7H_cO4uE8Sk",
+        "--dart-define=SUPABASE_URL=${env:SUPABASE_URL}",
+        "--dart-define=SUPABASE_ANON_KEY=${env:SUPABASE_ANON_KEY}",
         "--dart-define=OPENAI_API_KEY=${env:OPENAI_API_KEY}",
         "--web-hostname",
         "localhost",
