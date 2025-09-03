@@ -4,8 +4,10 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
 import '../services/mcp_client_service.dart';
+import '../services/custom_prompts_service.dart';
 import '../models/user_model.dart';
 import '../models/openai_function.dart';
+import '../models/custom_ai_prompt.dart';
 import '../config/openai_config.dart';
 import '../widgets/user_management_modal.dart';
 
@@ -34,12 +36,19 @@ class _AIMCPTestPageState extends State<AIMCPTestPage> {
   UserModel? _selectedUser;
   final TextEditingController _questionController = TextEditingController();
   final TextEditingController _customPromptController = TextEditingController();
+  final TextEditingController _promptNameController = TextEditingController();
   final ScrollController _conversationScrollController = ScrollController();
   List<ChatMessage> _conversationHistory = [];
   bool _isAiProcessing = false;
   bool _isHistoryExpanded = false;
   List<UserModel> _users = [];
   bool _isLoading = false;
+
+  // Custom prompts state
+  List<CustomAiPrompt> _savedPrompts = [];
+  CustomAiPrompt? _selectedPrompt;
+  bool _isLoadingPrompts = false;
+  String _promptStatus = 'Ready';
 
   // MCP service for health data access
   MCPClientService? _mcpService;
@@ -104,12 +113,15 @@ Always respond as if you're speaking directly to your client in a supportive con
     _customPromptController.text = _defaultSystemPrompt;
     // Load users for AI testing
     _loadUsersForAi();
+    // Load saved prompts
+    _loadSavedPrompts();
   }
 
   @override
   void dispose() {
     _questionController.dispose();
     _customPromptController.dispose();
+    _promptNameController.dispose();
     _conversationScrollController.dispose();
     super.dispose();
   }
@@ -224,10 +236,161 @@ Always respond as if you're speaking directly to your client in a supportive con
     }
   }
 
+  /// Load saved custom prompts from database
+  Future<void> _loadSavedPrompts() async {
+    setState(() {
+      _isLoadingPrompts = true;
+      _promptStatus = 'Loading saved prompts...';
+    });
+
+    try {
+      final prompts = await CustomPromptsService.getCustomPrompts('goal_setting');
+      setState(() {
+        _savedPrompts = prompts;
+        _promptStatus = 'Loaded ${prompts.length} saved prompts';
+      });
+      print('✅ Loaded ${prompts.length} saved prompts');
+    } catch (e) {
+      print('❌ Error loading saved prompts: $e');
+      setState(() {
+        _promptStatus = 'Error loading prompts: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoadingPrompts = false;
+      });
+    }
+  }
+
+  /// Save current custom prompt to database
+  Future<void> _saveCurrentPrompt() async {
+    final promptName = _promptNameController.text.trim();
+    final promptText = _customPromptController.text.trim();
+
+    if (promptName.isEmpty) {
+      setState(() {
+        _promptStatus = 'Please enter a prompt name';
+      });
+      return;
+    }
+
+    if (promptText.isEmpty) {
+      setState(() {
+        _promptStatus = 'Please enter prompt text';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoadingPrompts = true;
+      _promptStatus = 'Saving prompt...';
+    });
+
+    try {
+      final savedPrompt = await CustomPromptsService.createCustomPrompt(
+        promptTypeId: 'goal_setting',
+        promptText: promptText,
+        promptName: promptName,
+      );
+
+      if (savedPrompt != null) {
+        await _loadSavedPrompts(); // Refresh the list
+        _promptNameController.clear();
+        setState(() {
+          _promptStatus = 'Prompt saved successfully!';
+        });
+        print('✅ Saved custom prompt: ${savedPrompt.promptName}');
+      } else {
+        setState(() {
+          _promptStatus = 'Failed to save prompt';
+        });
+      }
+    } catch (e) {
+      print('❌ Error saving prompt: $e');
+      setState(() {
+        _promptStatus = 'Error saving prompt: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoadingPrompts = false;
+      });
+    }
+  }
+
+  /// Load selected prompt into the editor
+  void _loadSelectedPrompt(CustomAiPrompt prompt) {
+    setState(() {
+      _selectedPrompt = prompt;
+      _customPromptController.text = prompt.promptText;
+      _promptStatus = 'Loaded prompt: ${prompt.promptName}';
+    });
+    print('� Loaded prompt: ${prompt.promptName}');
+  }
+
+  /// Delete a saved prompt
+  Future<void> _deleteSavedPrompt(CustomAiPrompt prompt) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Prompt'),
+        content: Text('Are you sure you want to delete "${prompt.promptName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isLoadingPrompts = true;
+      _promptStatus = 'Deleting prompt...';
+    });
+
+    try {
+      final success = await CustomPromptsService.deleteCustomPrompt(prompt.id);
+      if (success) {
+        await _loadSavedPrompts(); // Refresh the list
+        if (_selectedPrompt?.id == prompt.id) {
+          setState(() {
+            _selectedPrompt = null;
+          });
+        }
+        setState(() {
+          _promptStatus = 'Prompt deleted successfully';
+        });
+        print('✅ Deleted prompt: ${prompt.promptName}');
+      } else {
+        setState(() {
+          _promptStatus = 'Failed to delete prompt';
+        });
+      }
+    } catch (e) {
+      print('❌ Error deleting prompt: $e');
+      setState(() {
+        _promptStatus = 'Error deleting prompt: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoadingPrompts = false;
+      });
+    }
+  }
+
   /// Reset custom prompt to default
   void _resetCustomPrompt() {
     setState(() {
       _customPromptController.text = _defaultSystemPrompt;
+      _selectedPrompt = null;
+      _promptStatus = 'Reset to default prompt';
     });
     print('🔄 Reset custom prompt to default');
   }
@@ -706,7 +869,7 @@ Always respond as if you're speaking directly to your client in a supportive con
               ),
             const SizedBox(height: 8),
             DropdownButtonFormField<UserModel>(
-              value: _users.contains(_selectedUser) ? _selectedUser : null,
+              initialValue: _users.contains(_selectedUser) ? _selectedUser : null,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(
@@ -869,6 +1032,226 @@ Always respond as if you're speaking directly to your client in a supportive con
               ],
             ),
             const SizedBox(height: 8),
+
+            // Status message
+            if (_promptStatus.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _promptStatus.contains('Error')
+                      ? Colors.red.shade50
+                      : _promptStatus.contains('success')
+                      ? Colors.green.shade50
+                      : Colors.blue.shade50,
+                  border: Border.all(
+                    color: _promptStatus.contains('Error')
+                        ? Colors.red.shade200
+                        : _promptStatus.contains('success')
+                        ? Colors.green.shade200
+                        : Colors.blue.shade200,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _promptStatus,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _promptStatus.contains('Error')
+                        ? Colors.red.shade700
+                        : _promptStatus.contains('success')
+                        ? Colors.green.shade700
+                        : Colors.blue.shade700,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
+            // Saved Prompts Section
+            Row(
+              children: [
+                const Text(
+                  'Saved Prompts:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _isLoadingPrompts ? null : _loadSavedPrompts,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Refresh'),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.blue.shade50,
+                    foregroundColor: Colors.blue.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Saved prompts dropdown
+            if (_savedPrompts.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButton<CustomAiPrompt>(
+                  value: _selectedPrompt,
+                  hint: const Text('Select a saved prompt'),
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  items: _savedPrompts.map((prompt) {
+                    return DropdownMenuItem<CustomAiPrompt>(
+                      value: prompt,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              prompt.promptName,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => _deleteSavedPrompt(prompt),
+                            icon: const Icon(Icons.delete, size: 16),
+                            color: Colors.red.shade400,
+                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (CustomAiPrompt? prompt) {
+                    if (prompt != null) {
+                      _loadSelectedPrompt(prompt);
+                    }
+                  },
+                ),
+              )
+            else if (_isLoadingPrompts)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Text(
+                    'No saved prompts yet. Create and save your first custom prompt!',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Save Current Prompt Section
+            const Text(
+              'Save Current Prompt:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+
+            // Prompt name input
+            TextField(
+              controller: _promptNameController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter a name for this prompt...',
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Save button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoadingPrompts ? null : _saveCurrentPrompt,
+                icon: _isLoadingPrompts
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save, size: 16),
+                label: const Text('Save Current Prompt'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade100,
+                  foregroundColor: Colors.green.shade700,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Prompt Editor Section
+            const Text(
+              'Prompt Editor:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+
+            // Current prompt info
+            if (_selectedPrompt != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  border: Border.all(color: Colors.blue.shade200),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.edit, size: 16, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Editing: ${_selectedPrompt!.promptName}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedPrompt = null;
+                        });
+                      },
+                      icon: const Icon(Icons.clear, size: 16),
+                      color: Colors.blue.shade600,
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 24,
+                        minHeight: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            // Prompt text editor
             Expanded(
               child: TextField(
                 controller: _customPromptController,
