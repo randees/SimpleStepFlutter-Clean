@@ -1,0 +1,1 @@
+cd /c/Projects/SimpleStepFlutter-Clean && flutter run -d chrome --web-port=3001 --dart-define-from-file=.env --debug
