@@ -1,6 +1,36 @@
 # ��� Simple Step Flutter - Health Tracking App
 
-A comprehensive Flutter application for health data tracking with AI-powered analytics, built with Supabase backend and OpenAI integration.
+A c4. **Run the application**
+   ```bash
+   flutter run
+   ```
+
+## 🚀 Development Commands
+
+### Running the Application
+
+**For Chrome Web Development** (recommended for testing):
+```bash
+cd /c/Projects/SimpleStepFlutter-Clean && flutter run -d chrome --debug --dart-define-from-file=.env
+```
+
+**For General Development**:
+```bash
+flutter run
+```
+
+**For Web Server** (accessible from other devices):
+```bash
+flutter run -d web-server --web-port 8080
+```
+
+### Hot Reload
+When the app is running, use:
+- `r` - Hot reload
+- `R` - Hot restart
+- `q` - Quit
+
+## 🔧 Configuration Guideensive Flutter application for health data tracking with AI-powered analytics, built with Supabase backend and OpenAI integration.
 
 ![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)

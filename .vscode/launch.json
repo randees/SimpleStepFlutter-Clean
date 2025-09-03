@@ -43,6 +43,31 @@
         "--web-port",
         "8080"
       ]
+    },
+    {
+      "name": "Flutter Web (Clean Debug - Port 3001)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--debug",
+        "--dart-define-from-file=.env",
+        "--web-port=3001"
+      ],
+      "console": "debugConsole"
+    },
+    {
+      "name": "Flutter Web (Release - No Debug Noise)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--release",
+        "--dart-define-from-file=.env",
+        "--web-port=3001"
+      ]
     }
   ],
   "compounds": [

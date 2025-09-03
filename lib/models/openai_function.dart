@@ -22,7 +22,7 @@ class OpenAIFunction {
   }
 }
 
-class StepAnalyticsFunctions {
+class HealthDataFunctions {
   static OpenAIFunction getStepSummary() {
     return OpenAIFunction(
       name: 'get_step_summary',
@@ -71,7 +71,155 @@ class StepAnalyticsFunctions {
     );
   }
 
+  static OpenAIFunction getHealthSummary() {
+    return OpenAIFunction(
+      name: 'get_health_summary',
+      description:
+          'Get comprehensive health data summary including vital signs, sleep, nutrition, wellness metrics, and recent health insights for a user.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'days': {
+            'type': 'number',
+            'default': 7,
+            'description':
+                'Number of days to analyze from current date backwards (default: 7)',
+          },
+        },
+        'required': ['userId'],
+      },
+    );
+  }
+
+  static OpenAIFunction getVitalSigns() {
+    return OpenAIFunction(
+      name: 'get_vital_signs',
+      description:
+          'Get vital signs data including heart rate, blood pressure, and other physiological measurements for a specific time period.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'startDate': {
+            'type': 'string',
+            'format': 'date',
+            'description': 'Start date for analysis (YYYY-MM-DD)',
+          },
+          'endDate': {
+            'type': 'string',
+            'format': 'date',
+            'description': 'End date for analysis (YYYY-MM-DD)',
+          },
+          'measurementType': {
+            'type': 'string',
+            'description':
+                'Specific vital sign type to filter by (optional): heart_rate, blood_pressure, temperature, etc.',
+          },
+        },
+        'required': ['userId', 'startDate', 'endDate'],
+      },
+    );
+  }
+
+  static OpenAIFunction getSleepAnalysis() {
+    return OpenAIFunction(
+      name: 'get_sleep_analysis',
+      description:
+          'Get detailed sleep analysis including sleep duration, quality, patterns, and insights for better sleep hygiene.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'days': {
+            'type': 'number',
+            'default': 7,
+            'description':
+                'Number of days to analyze from current date backwards (default: 7)',
+          },
+        },
+        'required': ['userId'],
+      },
+    );
+  }
+
+  static OpenAIFunction getNutritionAnalysis() {
+    return OpenAIFunction(
+      name: 'get_nutrition_analysis',
+      description:
+          'Get nutrition analysis including calorie intake, macronutrient breakdown, hydration, and meal patterns.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'days': {
+            'type': 'number',
+            'default': 7,
+            'description':
+                'Number of days to analyze from current date backwards (default: 7)',
+          },
+        },
+        'required': ['userId'],
+      },
+    );
+  }
+
+  static OpenAIFunction getWellnessMetrics() {
+    return OpenAIFunction(
+      name: 'get_wellness_metrics',
+      description:
+          'Get wellness and mental health metrics including mood, stress levels, meditation, and overall wellness trends.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'days': {
+            'type': 'number',
+            'default': 7,
+            'description':
+                'Number of days to analyze from current date backwards (default: 7)',
+          },
+        },
+        'required': ['userId'],
+      },
+    );
+  }
+
+  static OpenAIFunction getHealthInsights() {
+    return OpenAIFunction(
+      name: 'get_health_insights',
+      description:
+          'Get recent health insights, patterns, recommendations, and personalized health advice generated from the user\'s health data.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'category': {
+            'type': 'string',
+            'description':
+                'Filter insights by category (optional): activity, sleep, nutrition, wellness, vital_signs',
+          },
+          'limit': {
+            'type': 'number',
+            'default': 5,
+            'description': 'Maximum number of insights to return (default: 5)',
+          },
+        },
+        'required': ['userId'],
+      },
+    );
+  }
+
   static List<OpenAIFunction> getAllFunctions() {
-    return [getStepSummary(), getActivityPatterns()];
+    return [
+      getStepSummary(),
+      getActivityPatterns(),
+      getHealthSummary(),
+      getVitalSigns(),
+      getSleepAnalysis(),
+      getNutritionAnalysis(),
+      getWellnessMetrics(),
+      getHealthInsights(),
+    ];
   }
 }
