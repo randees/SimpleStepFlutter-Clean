@@ -7,6 +7,7 @@ import '../services/mcp_client_service.dart';
 import '../models/user_model.dart';
 import '../models/openai_function.dart';
 import '../config/openai_config.dart';
+import '../widgets/user_management_modal.dart';
 
 class ChatMessage {
   final String message;
@@ -20,7 +21,7 @@ class ChatMessage {
   });
 }
 
-/// Goal Setting Agent page - AI-powered goal planning with OpenAI integration
+/// Comprehensive Health Data AI Assistant - AI-powered health analysis with OpenAI integration
 class AIMCPTestPage extends StatefulWidget {
   const AIMCPTestPage({super.key});
 
@@ -45,7 +46,7 @@ class _AIMCPTestPageState extends State<AIMCPTestPage> {
 
   // Default system prompt
   static const String _defaultSystemPrompt =
-      '''You are a certified health provider and fitness trainer who cares deeply about helping people improve their health and wellness. You have access to detailed health data through MCP (Model Context Protocol) tools that can fetch real health information from Supabase.
+      '''You are a certified health provider and fitness trainer who cares deeply about helping people improve their health and wellness. You have access to comprehensive health data through MCP (Model Context Protocol) tools that can fetch real health information from Supabase.
 
 Your personality and approach:
 - Speak in a warm, encouraging, and professional tone
@@ -56,9 +57,15 @@ Your personality and approach:
 - Use "you" and "your" to make responses personal and engaging
 - Include practical tips and suggestions for better health outcomes
 
-IMPORTANT: You have access to the following health data tools:
+IMPORTANT: You have access to the following comprehensive health data tools:
 1. get_step_summary: Get detailed step analytics including most/least active days and patterns
 2. get_activity_patterns: Get weekly activity patterns and trends
+3. get_health_summary: Get comprehensive health overview including all vital signs, sleep, nutrition, and wellness metrics
+4. get_vital_signs: Get specific vital signs data (heart rate, blood pressure, temperature, etc.)
+5. get_sleep_analysis: Get detailed sleep patterns, quality, and duration analysis
+6. get_nutrition_analysis: Get nutrition data including calories, macronutrients, hydration, and meal patterns
+7. get_wellness_metrics: Get mental health and wellness data including mood, stress, meditation
+8. get_health_insights: Get AI-generated health insights, recommendations, and personalized advice
 
 CRITICAL USER IDENTIFICATION FOR MCP FUNCTIONS:
 - Primary User ID (UUID): {user_id}
@@ -68,7 +75,7 @@ CRITICAL USER IDENTIFICATION FOR MCP FUNCTIONS:
 
 IMPORTANT DATE CONTEXT:
 - Today's date: {current_date}
-- When users ask for recent data, use the last 30 days from today
+- When users ask for recent data, use the last 7-30 days from today depending on the data type
 - When users ask for broad historical data, use from beginning of time (earliest available data) to today
 - Always default to current and recent data unless told otherwise
 
@@ -80,11 +87,11 @@ Current client context:
 - Activity Level: {user_activity_level}
 - Health Goals: {user_health_goals}
 
-When users ask about their health data, step counts, activity patterns, or fitness progress, you MUST call the appropriate function to get their actual data before providing advice. Don't make assumptions - always fetch real data first.
+When users ask about their health data, step counts, activity patterns, sleep, nutrition, vital signs, wellness, or fitness progress, you MUST call the appropriate function to get their actual data before providing advice. Don't make assumptions - always fetch real data first.
 
 Use a ReAct (Reasoning and Acting) approach:
 1. Think about what health data you need to provide the best guidance
-2. Act by calling the appropriate function (get_step_summary or get_activity_patterns)
+2. Act by calling the appropriate function (start with get_health_summary for general questions, then use specific functions for detailed analysis)
 3. Observe the results and analyze patterns
 4. Provide encouraging, actionable health advice based on their REAL data
 
@@ -223,6 +230,36 @@ Always respond as if you're speaking directly to your client in a supportive con
       _customPromptController.text = _defaultSystemPrompt;
     });
     print('🔄 Reset custom prompt to default');
+  }
+
+  /// Show user management modal
+  void _showUserManagementModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UserManagementModal(
+        onUserSelected: (UserModel user) {
+          setState(() {
+            _selectedUser = user;
+            // Initialize MCP service for the selected user
+            _mcpService = MCPClientService(userId: user.id);
+            _mcpService!.initialize().then((success) {
+              if (success) {
+                print(
+                  '✅ MCP service initialized for user: ${user.friendlyName}',
+                );
+              } else {
+                print(
+                  '❌ Failed to initialize MCP service for user: ${user.friendlyName}',
+                );
+              }
+            });
+          });
+          // Modal now handles closing itself
+        },
+      ),
+    );
   }
 
   /// Submit question with custom system prompt
@@ -419,7 +456,7 @@ Always respond as if you're speaking directly to your client in a supportive con
     };
 
     // Define available tools for OpenAI (using the new tools format)
-    final tools = StepAnalyticsFunctions.getAllFunctions()
+    final tools = HealthDataFunctions.getAllFunctions()
         .map((f) => {'type': 'function', 'function': f.toJson()})
         .toList();
 
@@ -520,13 +557,13 @@ Always respond as if you're speaking directly to your client in a supportive con
     try {
       switch (functionName) {
         case 'get_step_summary':
-          // Call MCP directly for OpenAI function calls
-          return await _mcpService!.callMCPFunctionForOpenAI(
-            functionName,
-            args,
-          );
-
         case 'get_activity_patterns':
+        case 'get_health_summary':
+        case 'get_vital_signs':
+        case 'get_sleep_analysis':
+        case 'get_nutrition_analysis':
+        case 'get_wellness_metrics':
+        case 'get_health_insights':
           // Call MCP directly for OpenAI function calls
           return await _mcpService!.callMCPFunctionForOpenAI(
             functionName,
@@ -626,9 +663,27 @@ Always respond as if you're speaking directly to your client in a supportive con
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Select User Context:',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Select User Context:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _showUserManagementModal,
+                  icon: const Icon(Icons.people, size: 18),
+                  label: const Text('User Management'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             if (_users.isEmpty)
@@ -713,7 +768,7 @@ Always respond as if you're speaking directly to your client in a supportive con
             Row(
               children: [
                 const Text(
-                  'Ask a Question:',
+                  'Ask a Health Question:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
@@ -742,7 +797,8 @@ Always respond as if you're speaking directly to your client in a supportive con
               controller: _questionController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'e.g., "How is my step count progress this week?"',
+                hintText:
+                    'e.g., "How is my overall health this week?" or "Show me my sleep patterns"',
                 contentPadding: EdgeInsets.all(12),
               ),
               maxLines: 3,
@@ -761,7 +817,7 @@ Always respond as if you're speaking directly to your client in a supportive con
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Ask AI'),
+                        : const Text('Ask Health AI'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -771,7 +827,7 @@ Always respond as if you're speaking directly to your client in a supportive con
                         ? null
                         : _submitQuestionCustom,
                     icon: const Icon(Icons.psychology, size: 16),
-                    label: const Text('Ask AI Custom'),
+                    label: const Text('Ask Health AI Custom'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple.shade100,
                       foregroundColor: Colors.purple.shade700,
@@ -889,7 +945,7 @@ Always respond as if you're speaking directly to your client in a supportive con
                       ),
                       child: const Center(
                         child: Text(
-                          'No conversation yet. Ask a question to get started!',
+                          'No health conversation yet. Ask a question about your health data to get started!',
                           style: TextStyle(
                             color: Colors.grey,
                             fontStyle: FontStyle.italic,

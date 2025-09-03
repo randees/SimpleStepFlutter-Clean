@@ -108,10 +108,10 @@ class MCPClientService {
       }
 
       MCPLogger.warning('Failed to get tools, using default functions');
-      return StepAnalyticsFunctions.getAllFunctions();
+      return HealthDataFunctions.getAllFunctions();
     } catch (e) {
       MCPLogger.error('Error getting available tools', error: e);
-      return StepAnalyticsFunctions.getAllFunctions();
+      return HealthDataFunctions.getAllFunctions();
     }
   }
 

@@ -52,6 +52,9 @@ class EnvConfig {
 
       final supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
       final supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY');
+      final supabaseServiceRoleKey = const String.fromEnvironment(
+        'SUPABASE_SERVICE_ROLE_KEY',
+      );
       final openaiKey = const String.fromEnvironment('OPENAI_API_KEY');
       final mcpEndpoint = const String.fromEnvironment('MCP_ENDPOINT');
       final mcpSecret = const String.fromEnvironment('MCP_SECRET');
@@ -64,6 +67,9 @@ class EnvConfig {
       );
       print(
         '  SUPABASE_ANON_KEY: ${supabaseAnonKey.isNotEmpty ? "✅ Set (${supabaseAnonKey.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  SUPABASE_SERVICE_ROLE_KEY: ${supabaseServiceRoleKey.isNotEmpty ? "✅ Set (${supabaseServiceRoleKey.length} chars)" : "❌ Empty"}',
       );
       print(
         '  OPENAI_API_KEY: ${openaiKey.isNotEmpty ? "✅ Set (${openaiKey.length} chars)" : "❌ Empty"}',
@@ -103,6 +109,8 @@ class EnvConfig {
         return const String.fromEnvironment('SUPABASE_URL');
       case 'SUPABASE_ANON_KEY':
         return const String.fromEnvironment('SUPABASE_ANON_KEY');
+      case 'SUPABASE_SERVICE_ROLE_KEY':
+        return const String.fromEnvironment('SUPABASE_SERVICE_ROLE_KEY');
       case 'OPENAI_API_KEY':
         return const String.fromEnvironment('OPENAI_API_KEY');
       case 'MCP_ENDPOINT':
@@ -193,6 +201,9 @@ class EnvConfig {
         case 'SUPABASE_ANON_KEY':
           value = _webConfig!['supabaseAnonKey']?.toString();
           break;
+        case 'SUPABASE_SERVICE_ROLE_KEY':
+          value = _webConfig!['supabaseServiceRoleKey']?.toString();
+          break;
         case 'OPENAI_API_KEY':
           value = _webConfig!['openaiApiKey']?.toString();
           break;
@@ -241,6 +252,10 @@ class EnvConfig {
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
+  /// Check if Supabase service role key is configured
+  static bool get isSupabaseServiceRoleConfigured =>
+      supabaseServiceRoleKey.isNotEmpty;
+
   // OpenAI Configuration
   static String get openaiApiKey => _getEnv('OPENAI_API_KEY');
 
@@ -279,8 +294,12 @@ class EnvConfig {
       'environment': isDevelopment ? 'development' : 'production',
       'debug_mode': debugMode,
       'supabase_configured': isSupabaseConfigured,
+      'supabase_service_role_configured': isSupabaseServiceRoleConfigured,
       'supabase_url': supabaseUrl.isNotEmpty
           ? '${supabaseUrl.substring(0, 20)}...'
+          : 'Not set',
+      'supabase_service_role_key': supabaseServiceRoleKey.isNotEmpty
+          ? getMaskedApiKey(supabaseServiceRoleKey)
           : 'Not set',
       'openai_configured': isOpenAIConfigured,
       'openai_api_key': openaiApiKey.isNotEmpty
