@@ -5,6 +5,7 @@
 - **Documentation**: All documents created should go into the `/docs` folder
 - **Critical Thinking**: Be critical of questions I ask - if I'm not correct, give me better options
 - **Security**: NEVER put any API keys or secrets into code - those should always be imported by environment variables
+- **Execution**: Always check the console before running a command to see if a server is running.  Prompt me for any server resets.
 
 ## Project-Specific Guidelines
 
