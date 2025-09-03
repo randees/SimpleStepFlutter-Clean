@@ -370,8 +370,8 @@ class SupabaseService {
     try {
       print('🔄 Exporting comprehensive data for user: $userId');
 
-      // Get user profile
-      final userResponse = await client
+      // Get user profile using admin client to bypass RLS
+      final userResponse = await adminClient
           .from('users')
           .select('*')
           .eq('id', userId)
@@ -381,126 +381,203 @@ class SupabaseService {
         throw Exception('User not found');
       }
 
-      // Get all health data tables for the user
-      final activityResponse = await client
+      // Get all health data tables for the user using admin client
+      final activityResponse = await adminClient
           .from('activity_data')
           .select('*')
           .eq('user_id', userId)
           .order('start_time');
 
-      final vitalSignsResponse = await client
+      final vitalSignsResponse = await adminClient
           .from('vital_signs')
           .select('*')
           .eq('user_id', userId)
           .order('measured_at');
 
-      final sleepDataResponse = await client
+      final sleepDataResponse = await adminClient
           .from('sleep_data')
           .select('*')
           .eq('user_id', userId)
           .order('sleep_date');
 
-      final nutritionDataResponse = await client
+      final nutritionDataResponse = await adminClient
           .from('nutrition_data')
           .select('*')
           .eq('user_id', userId)
           .order('logged_at');
 
-      final bodyMeasurementsResponse = await client
+      final bodyMeasurementsResponse = await adminClient
           .from('body_measurements')
           .select('*')
           .eq('user_id', userId)
           .order('measured_at');
 
-      final wellnessDataResponse = await client
+      final wellnessDataResponse = await adminClient
           .from('wellness_data')
           .select('*')
           .eq('user_id', userId)
           .order('recorded_at');
 
-      final healthInsightsResponse = await client
+      final healthInsightsResponse = await adminClient
           .from('health_insights')
           .select('*')
           .eq('user_id', userId)
           .order('generated_at');
 
-      final recommendationsResponse = await client
+      final recommendationsResponse = await adminClient
           .from('recommendations')
           .select('*')
           .eq('user_id', userId)
           .order('generated_at');
 
-      final dailySummariesResponse = await client
-          .from('daily_summaries')
-          .select('*')
-          .eq('user_id', userId)
-          .order('summary_date');
-
-      final userDevicesResponse = await client
+      final userDevicesResponse = await adminClient
           .from('user_devices')
           .select('*')
           .eq('user_id', userId)
           .order('created_at');
 
-      final dataSyncLogResponse = await client
-          .from('data_sync_log')
-          .select('*')
-          .eq('user_id', userId)
-          .order('sync_started_at');
+      // Clean user profile data to match import format (remove only id, keep timestamps)
+      final cleanUserProfile = Map<String, dynamic>.from(userResponse);
+      cleanUserProfile.remove(
+        'id',
+      ); // Remove database ID to match import format
+      // Keep created_at and updated_at as they exist in import format
+      // Ensure first_name, last_name, display_name are included
+
+      // Clean all health data arrays to remove database IDs and user_ids
+      final cleanActivityData = activityResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('device_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanVitalSigns = vitalSignsResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('device_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanSleepData = sleepDataResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('device_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanNutritionData = nutritionDataResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('device_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanBodyMeasurements = bodyMeasurementsResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('device_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanWellnessData = wellnessDataResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('device_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanHealthInsights = healthInsightsResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanRecommendations = recommendationsResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      final cleanUserDevices = userDevicesResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        // Keep created_at for devices as it exists in import format
+        // Only remove updated_at if it exists
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
+      // Calculate total records for export (matching import format)
+      final totalRecords =
+          cleanActivityData.length +
+          cleanVitalSigns.length +
+          cleanSleepData.length +
+          cleanNutritionData.length +
+          cleanBodyMeasurements.length +
+          cleanWellnessData.length +
+          cleanHealthInsights.length +
+          cleanRecommendations.length +
+          cleanUserDevices.length;
 
       final exportData = {
         'export_metadata': {
+          'export_format_version': '1.0.0', // Match import format version
           'export_date': DateTime.now().toIso8601String(),
-          'app_version': '1.0.0',
-          'export_format_version':
-              '2.0', // Updated to v2.0 for comprehensive export
-          'exported_by': 'SimpleStep Flutter App',
-          'total_tables': 11,
-          'user_id': userId,
-          'device_count': userDevicesResponse.length,
-          'total_records':
-              activityResponse.length +
-              vitalSignsResponse.length +
-              sleepDataResponse.length +
-              nutritionDataResponse.length +
-              bodyMeasurementsResponse.length +
-              wellnessDataResponse.length +
-              healthInsightsResponse.length +
-              recommendationsResponse.length +
-              dailySummariesResponse.length +
-              userDevicesResponse.length +
-              dataSyncLogResponse.length,
+          'exported_by': 'System', // Match import format
+          'total_records': totalRecords,
         },
-        'user_profile': userResponse,
-        'user_devices': userDevicesResponse,
-        'activity_data': activityResponse,
-        'vital_signs': vitalSignsResponse,
-        'sleep_data': sleepDataResponse,
-        'nutrition_data': nutritionDataResponse,
-        'body_measurements': bodyMeasurementsResponse,
-        'wellness_data': wellnessDataResponse,
-        'health_insights': healthInsightsResponse,
-        'recommendations': recommendationsResponse,
-        'daily_summaries': dailySummariesResponse,
-        'data_sync_log': dataSyncLogResponse,
+        'user_profile': cleanUserProfile,
+        'user_devices': cleanUserDevices,
+        'activity_data': cleanActivityData,
+        'vital_signs': cleanVitalSigns,
+        'sleep_data': cleanSleepData,
+        'nutrition_data': cleanNutritionData,
+        'body_measurements': cleanBodyMeasurements,
+        'wellness_data': cleanWellnessData,
+        'health_insights': cleanHealthInsights,
+        'recommendations': cleanRecommendations,
       };
 
       // Log export summary
       print('✅ Export Summary for user $userId:');
       print('   - User Profile: 1 record');
-      print('   - User Devices: ${userDevicesResponse.length} records');
-      print('   - Activity Data: ${activityResponse.length} records');
-      print('   - Vital Signs: ${vitalSignsResponse.length} records');
-      print('   - Sleep Data: ${sleepDataResponse.length} records');
-      print('   - Nutrition Data: ${nutritionDataResponse.length} records');
-      print(
-        '   - Body Measurements: ${bodyMeasurementsResponse.length} records',
-      );
-      print('   - Wellness Data: ${wellnessDataResponse.length} records');
-      print('   - Health Insights: ${healthInsightsResponse.length} records');
-      print('   - Recommendations: ${recommendationsResponse.length} records');
-      print('   - Daily Summaries: ${dailySummariesResponse.length} records');
-      print('   - Data Sync Log: ${dataSyncLogResponse.length} records');
+      print('   - User Devices: ${cleanUserDevices.length} records');
+      print('   - Activity Data: ${cleanActivityData.length} records');
+      print('   - Vital Signs: ${cleanVitalSigns.length} records');
+      print('   - Sleep Data: ${cleanSleepData.length} records');
+      print('   - Nutrition Data: ${cleanNutritionData.length} records');
+      print('   - Body Measurements: ${cleanBodyMeasurements.length} records');
+      print('   - Wellness Data: ${cleanWellnessData.length} records');
+      print('   - Health Insights: ${cleanHealthInsights.length} records');
+      print('   - Recommendations: ${cleanRecommendations.length} records');
+      print('   - Total Records: $totalRecords');
+      print('   - Export Format: 1.0.0 (compatible with import)');
 
       print('✅ Successfully exported comprehensive data for user: $userId');
       return exportData;
@@ -682,9 +759,53 @@ class SupabaseService {
       // Use the new user ID for all subsequent operations
       final actualUserId = newUserId;
 
-      // Import all health data tables
-      final tables = [
-        'user_devices',
+      // STEP 2: Import user_devices first to establish device_id mappings
+      final Map<String, String> actualDeviceIdMapping = {};
+      
+      if (importData.containsKey('user_devices')) {
+        final userDevices = importData['user_devices'] as List<dynamic>;
+        if (userDevices.isNotEmpty) {
+          print('🔄 STEP 2: Importing user_devices first to get device IDs...');
+          print('🔄 Importing user_devices: ${userDevices.length} devices...');
+
+          final deviceInsertData = <Map<String, dynamic>>[];
+          
+          for (int i = 0; i < userDevices.length; i++) {
+            final device = userDevices[i];
+            final deviceMap = Map<String, dynamic>.from(device as Map<String, dynamic>);
+            
+            // Generate new device ID
+            final newDeviceId = _generateUuid();
+            final oldDeviceId = deviceMap['id']?.toString();
+            
+            // Set up the device record for insertion
+            deviceMap.remove('id'); // Remove old ID
+            deviceMap['id'] = newDeviceId; // Set new ID
+            deviceMap['user_id'] = actualUserId; // Link to user
+            
+            deviceInsertData.add(deviceMap);
+            
+            // Track the device ID mapping for health data
+            if (oldDeviceId != null) {
+              actualDeviceIdMapping[oldDeviceId] = newDeviceId;
+              print('🔗 Device mapping: $oldDeviceId → $newDeviceId');
+            }
+            
+            print('🔗 Set user_id for device: $actualUserId');
+          }
+          
+          // Insert all devices
+          await adminClient.from('user_devices').insert(deviceInsertData);
+          print('✅ Imported ${deviceInsertData.length} devices to user_devices');
+        } else {
+          print('ℹ️  No devices found in import data');
+        }
+      } else {
+        print('ℹ️  No user_devices found in import data');
+      }
+
+      // STEP 3: Import all health data tables (now with device mappings available)
+      final healthDataTables = [
         'activity_data',
         'vital_signs',
         'sleep_data',
@@ -697,54 +818,53 @@ class SupabaseService {
         'data_sync_log',
       ];
 
-      int totalRecordsImported = 0;
+      int totalRecordsImported = 0; // Will count all imported records
 
-      for (final tableName in tables) {
+      print('🔄 STEP 3: Importing health data with proper user_id and device_id relationships...');
+
+      for (final tableName in healthDataTables) {
         if (importData.containsKey(tableName)) {
           final tableData = importData[tableName] as List<dynamic>;
           if (tableData.isNotEmpty) {
             print('🔄 Importing $tableName: ${tableData.length} records...');
 
-            // Apply device ID mapping and clean up IDs for the data
+            // Clean up IDs and apply device/user mappings for health data
             final mappedTableData = <Map<String, dynamic>>[];
             for (final record in tableData) {
               final recordMap = Map<String, dynamic>.from(
                 record as Map<String, dynamic>,
               );
 
-              // For user_devices table, handle device ID mapping
-              if (tableName == 'user_devices') {
-                if (recordMap.containsKey('id') &&
-                    deviceIdMapping.containsKey(recordMap['id'])) {
-                  recordMap['id'] = deviceIdMapping[recordMap['id']]!;
-                  print(
-                    '🔄 Mapped device ID in $tableName: ${record['id']} → ${recordMap['id']}',
-                  );
-                }
-              } else {
-                // For all other tables, remove the id field to let database auto-generate UUIDs
-                if (recordMap.containsKey('id')) {
-                  print(
-                    '🔄 Removing ID field from $tableName record: ${recordMap['id']} (will be auto-generated)',
-                  );
-                  recordMap.remove('id');
-                }
+              // Remove the id field to let database auto-generate UUIDs
+              if (recordMap.containsKey('id')) {
+                print(
+                  '🔄 Removing ID field from $tableName record: ${recordMap['id']} (will be auto-generated)',
+                );
+                recordMap.remove('id');
               }
 
-              // Replace device_id references with new UUIDs
+              // Replace device_id references with new device UUIDs
               if (recordMap.containsKey('device_id') &&
                   recordMap['device_id'] != null &&
-                  deviceIdMapping.containsKey(recordMap['device_id'])) {
+                  actualDeviceIdMapping.containsKey(recordMap['device_id'])) {
                 final oldDeviceId = recordMap['device_id'];
-                recordMap['device_id'] = deviceIdMapping[oldDeviceId]!;
+                recordMap['device_id'] = actualDeviceIdMapping[oldDeviceId]!;
                 print(
-                  '🔄 Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
+                  '� Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
                 );
               }
 
-              // Replace user_id with the actual new user ID
-              if (recordMap.containsKey('user_id')) {
+              // Set user_id for the new user (always required for health data records)
+              if (tableName != 'user_devices' &&
+                  tableName != 'daily_summaries' &&
+                  tableName != 'data_sync_log') {
+                // All health data tables need user_id foreign key
                 recordMap['user_id'] = actualUserId;
+                print('🔗 Set user_id for $tableName record: $actualUserId');
+              } else if (tableName == 'user_devices') {
+                // user_devices table also needs user_id foreign key
+                recordMap['user_id'] = actualUserId;
+                print('🔗 Set user_id for device: $actualUserId');
               }
 
               mappedTableData.add(recordMap);
@@ -782,7 +902,7 @@ class SupabaseService {
       print('   - New User ID: $actualUserId');
       print('   - Email: ${updatedUserProfile['email']}');
       print('   - Total Records Imported: $totalRecordsImported');
-      print('   - Tables Processed: ${tables.length}');
+      print('   - Health Data Tables Processed: ${healthDataTables.length}');
       print('   - Device IDs Mapped: ${deviceIdMapping.length}');
 
       if (deviceIdMapping.isNotEmpty) {
