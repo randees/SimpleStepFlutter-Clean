@@ -761,7 +761,7 @@ class SupabaseService {
 
       // STEP 2: Import user_devices first to establish device_id mappings
       final Map<String, String> actualDeviceIdMapping = {};
-      
+
       if (importData.containsKey('user_devices')) {
         final userDevices = importData['user_devices'] as List<dynamic>;
         if (userDevices.isNotEmpty) {
@@ -769,34 +769,38 @@ class SupabaseService {
           print('🔄 Importing user_devices: ${userDevices.length} devices...');
 
           final deviceInsertData = <Map<String, dynamic>>[];
-          
+
           for (int i = 0; i < userDevices.length; i++) {
             final device = userDevices[i];
-            final deviceMap = Map<String, dynamic>.from(device as Map<String, dynamic>);
-            
+            final deviceMap = Map<String, dynamic>.from(
+              device as Map<String, dynamic>,
+            );
+
             // Generate new device ID
             final newDeviceId = _generateUuid();
             final oldDeviceId = deviceMap['id']?.toString();
-            
+
             // Set up the device record for insertion
             deviceMap.remove('id'); // Remove old ID
             deviceMap['id'] = newDeviceId; // Set new ID
             deviceMap['user_id'] = actualUserId; // Link to user
-            
+
             deviceInsertData.add(deviceMap);
-            
+
             // Track the device ID mapping for health data
             if (oldDeviceId != null) {
               actualDeviceIdMapping[oldDeviceId] = newDeviceId;
               print('🔗 Device mapping: $oldDeviceId → $newDeviceId');
             }
-            
+
             print('🔗 Set user_id for device: $actualUserId');
           }
-          
+
           // Insert all devices
           await adminClient.from('user_devices').insert(deviceInsertData);
-          print('✅ Imported ${deviceInsertData.length} devices to user_devices');
+          print(
+            '✅ Imported ${deviceInsertData.length} devices to user_devices',
+          );
         } else {
           print('ℹ️  No devices found in import data');
         }
@@ -820,7 +824,9 @@ class SupabaseService {
 
       int totalRecordsImported = 0; // Will count all imported records
 
-      print('🔄 STEP 3: Importing health data with proper user_id and device_id relationships...');
+      print(
+        '🔄 STEP 3: Importing health data with proper user_id and device_id relationships...',
+      );
 
       for (final tableName in healthDataTables) {
         if (importData.containsKey(tableName)) {
