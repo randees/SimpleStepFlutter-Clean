@@ -10,6 +10,7 @@ import {
   getWellnessMetrics, 
   getHealthInsights 
 } from '../_shared/health_data.ts'
+import { getGeneticInsights } from '../_shared/genetic_insights.ts'
 
 interface MCPRequest {
   method: string
@@ -214,6 +215,19 @@ async function handleToolsList(): Promise<MCPResponse> {
               userId: { type: "string", description: "User ID to analyze" },
               category: { type: "string", description: "Filter insights by category (optional)" },
               limit: { type: "number", default: 5, description: "Maximum number of insights" }
+            },
+            required: ["userId"]
+          }
+        },
+        {
+          name: "get_genetic_insights",
+          description: "Get genetic insights and personalized health recommendations based on genetic data analysis",
+          inputSchema: {
+            type: "object",
+            properties: {
+              userId: { type: "string", description: "User ID to analyze" },
+              insightType: { type: "string", description: "Specific type of genetic insight (optional): metabolism, fitness, nutrition, health_risks, all" },
+              limit: { type: "number", default: 10, description: "Maximum number of genetic insights to return" }
             },
             required: ["userId"]
           }
@@ -581,6 +595,60 @@ ${insights.map((insight, index) =>
             content: [{ 
               type: "text", 
               text: insightsText
+            }] 
+          } 
+        }
+      
+      case 'get_genetic_insights':
+        if (!args.userId) {
+          return {
+            error: {
+              code: -32602,
+              message: 'userId parameter is required for genetic insights'
+            }
+          }
+        }
+        
+        const geneticInsights = await getGeneticInsights(
+          supabaseUrl,
+          supabaseKey,
+          args.userId,
+          args.insightType,
+          args.limit || 10
+        )
+        
+        const geneticText = `
+**Genetic Insights & Personalized Recommendations**
+
+${geneticInsights.length > 0 ? `
+🧬 **Your Genetic Profile Insights:**
+${geneticInsights.map((insight, index) => 
+  `${index + 1}. **${insight.title}**
+   ${insight.description}
+   ${insight.recommendations ? '💡 ' + insight.recommendations : ''}
+   Confidence: ${Math.round(insight.confidence_score * 100)}%`
+).join('\n\n')}
+
+📊 **Analysis Summary:**
+- Total Genetic Insights: ${geneticInsights.length}
+- Categories: ${[...new Set(geneticInsights.map(g => g.category))].join(', ')}
+` : '🧬 **No genetic insights available yet**\n\nGenetic insights are generated based on your genetic data analysis. Upload your genetic data or connect with a genetic testing service to receive personalized recommendations based on your unique genetic profile.'}
+
+🎯 **Genetic Health Benefits:**
+- Personalized nutrition recommendations based on your genetic makeup
+- Optimized exercise plans that work best with your genetic profile
+- Health risk assessments for proactive wellness
+- Metabolic insights for better weight management
+- Recovery optimization based on your genetic recovery patterns
+
+💡 **Next Steps:** Consider getting a comprehensive genetic test to unlock personalized health insights tailored specifically to your DNA.
+        `.trim()
+        
+        return { 
+          result: { 
+            content: [{ 
+              type: "text", 
+              text: geneticText
             }] 
           } 
         }

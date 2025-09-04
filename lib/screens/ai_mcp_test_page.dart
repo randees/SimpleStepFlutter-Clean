@@ -79,6 +79,7 @@ IMPORTANT: You have access to the following comprehensive health data tools:
 6. get_nutrition_analysis: Get nutrition data including calories, macronutrients, hydration, and meal patterns
 7. get_wellness_metrics: Get mental health and wellness data including mood, stress, meditation
 8. get_health_insights: Get AI-generated health insights, recommendations, and personalized advice
+9. get_genetic_insights: Get genetic insights and personalized health recommendations based on genetic data analysis
 
 CRITICAL USER IDENTIFICATION FOR MCP FUNCTIONS:
 - Primary User ID (UUID): {user_id}
@@ -463,6 +464,330 @@ Always respond as if you're speaking directly to your client in a supportive con
           });
           // Modal now handles closing itself
         },
+      ),
+    );
+  }
+
+  /// Show prompt help modal with available tools and variables
+  void _showPromptHelpModal() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.8,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.help_outline,
+                      color: Colors.blue,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Custom Prompt Help',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Close',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Available Tools Section
+                        const Text(
+                          '🔧 Available Tools',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'You can use these functions in your custom prompts to access health data:',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Tools list
+                        _buildToolItem(
+                          'get_step_summary',
+                          'Get detailed step analytics including most/least active days and patterns',
+                        ),
+                        _buildToolItem(
+                          'get_activity_patterns',
+                          'Get weekly activity patterns and trends',
+                        ),
+                        _buildToolItem(
+                          'get_health_summary',
+                          'Get comprehensive health overview including all vital signs, sleep, nutrition, and wellness metrics',
+                        ),
+                        _buildToolItem(
+                          'get_vital_signs',
+                          'Get specific vital signs data (heart rate, blood pressure, temperature, etc.)',
+                        ),
+                        _buildToolItem(
+                          'get_sleep_analysis',
+                          'Get detailed sleep patterns, quality, and duration analysis',
+                        ),
+                        _buildToolItem(
+                          'get_nutrition_analysis',
+                          'Get nutrition data including calories, macronutrients, hydration, and meal patterns',
+                        ),
+                        _buildToolItem(
+                          'get_wellness_metrics',
+                          'Get mental health and wellness data including mood, stress, meditation',
+                        ),
+                        _buildToolItem(
+                          'get_health_insights',
+                          'Get AI-generated health insights, recommendations, and personalized advice',
+                        ),
+                        _buildToolItem(
+                          'get_genetic_insights',
+                          'Get genetic insights and personalized health recommendations based on genetic data analysis',
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Available Variables Section
+                        const Text(
+                          '📝 Available Variables',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Use these variables in your prompts - they will be automatically replaced with user data:',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Variables list
+                        _buildVariableItem(
+                          '{user_id}',
+                          'User\'s unique identifier (UUID) - required for all MCP function calls',
+                        ),
+                        _buildVariableItem(
+                          '{user_email}',
+                          'User\'s email address - fallback identifier',
+                        ),
+                        _buildVariableItem(
+                          '{user_name}',
+                          'User\'s display name',
+                        ),
+                        _buildVariableItem(
+                          '{user_age}',
+                          'User\'s age calculated from date of birth',
+                        ),
+                        _buildVariableItem(
+                          '{user_activity_level}',
+                          'User\'s activity level (e.g., "Moderately Active")',
+                        ),
+                        _buildVariableItem(
+                          '{user_health_goals}',
+                          'User\'s health goals (comma-separated list)',
+                        ),
+                        _buildVariableItem(
+                          '{current_date}',
+                          'Today\'s date in YYYY-MM-DD format',
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Usage Tips Section
+                        const Text(
+                          '💡 Usage Tips',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade200),
+                          ),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '• Always use {user_id} for MCP function calls - this is the primary identifier',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '• Use {current_date} for date-based queries to get recent data',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '• Combine multiple tools for comprehensive health analysis',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '• Use ReAct pattern: Think → Act (call function) → Observe → Respond',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '• Keep responses under 1000 characters when possible',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Example Section
+                        const Text(
+                          '📋 Example Prompt',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: const Text(
+                            'You are a helpful health assistant for {user_name}. When users ask about their health data, always call the appropriate function first to get their real data before providing advice.\n\nAvailable tools:\n- get_health_summary: Get comprehensive health overview\n- get_step_summary: Get step analytics\n- get_sleep_analysis: Get sleep patterns\n\nCurrent date: {current_date}\nUser ID for functions: {user_id}\n\nUse a ReAct approach: Think about what data you need, call the function, then provide personalized advice based on real data.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Close button
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Helper method to build tool items
+  Widget _buildToolItem(String name, String description) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper method to build variable items
+  Widget _buildVariableItem(String variable, String description) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.green.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            variable,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Colors.green,
+              fontFamily: 'monospace',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              description,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -861,6 +1186,7 @@ Always respond as if you're speaking directly to your client in a supportive con
         case 'get_nutrition_analysis':
         case 'get_wellness_metrics':
         case 'get_health_insights':
+        case 'get_genetic_insights':
           // Call MCP directly for OpenAI function calls
           return await _mcpService!.callMCPFunctionForOpenAI(
             functionName,
@@ -1210,6 +1536,16 @@ Always respond as if you're speaking directly to your client in a supportive con
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
+                TextButton.icon(
+                  onPressed: _showPromptHelpModal,
+                  icon: const Icon(Icons.help_outline, size: 16),
+                  label: const Text('Help'),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.blue.shade100,
+                    foregroundColor: Colors.blue.shade700,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: _resetCustomPrompt,
                   icon: const Icon(Icons.refresh, size: 16),
