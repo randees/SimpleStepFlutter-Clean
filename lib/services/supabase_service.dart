@@ -436,6 +436,12 @@ class SupabaseService {
           .eq('user_id', userId)
           .order('created_at');
 
+      final geneticInsightsResponse = await adminClient
+          .from('genetic_insights')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at');
+
       // Clean user profile data to match import format (remove only id, keep timestamps)
       final cleanUserProfile = Map<String, dynamic>.from(userResponse);
       cleanUserProfile.remove(
@@ -533,6 +539,15 @@ class SupabaseService {
         return cleaned;
       }).toList();
 
+      final cleanGeneticInsights = geneticInsightsResponse.map((item) {
+        final cleaned = Map<String, dynamic>.from(item);
+        cleaned.remove('id');
+        cleaned.remove('user_id');
+        cleaned.remove('created_at');
+        cleaned.remove('updated_at');
+        return cleaned;
+      }).toList();
+
       // Calculate total records for export (matching import format)
       final totalRecords =
           cleanActivityData.length +
@@ -543,7 +558,8 @@ class SupabaseService {
           cleanWellnessData.length +
           cleanHealthInsights.length +
           cleanRecommendations.length +
-          cleanUserDevices.length;
+          cleanUserDevices.length +
+          cleanGeneticInsights.length;
 
       final exportData = {
         'export_metadata': {
@@ -551,6 +567,8 @@ class SupabaseService {
           'export_date': DateTime.now().toIso8601String(),
           'exported_by': 'System', // Match import format
           'total_records': totalRecords,
+          'device_count': cleanUserDevices.length,
+          'genetic_insights_count': cleanGeneticInsights.length,
         },
         'user_profile': cleanUserProfile,
         'user_devices': cleanUserDevices,
@@ -562,6 +580,7 @@ class SupabaseService {
         'wellness_data': cleanWellnessData,
         'health_insights': cleanHealthInsights,
         'recommendations': cleanRecommendations,
+        'genetic_insights': cleanGeneticInsights,
       };
 
       // Log export summary
@@ -576,6 +595,7 @@ class SupabaseService {
       print('   - Wellness Data: ${cleanWellnessData.length} records');
       print('   - Health Insights: ${cleanHealthInsights.length} records');
       print('   - Recommendations: ${cleanRecommendations.length} records');
+      print('   - Genetic Insights: ${cleanGeneticInsights.length} records');
       print('   - Total Records: $totalRecords');
       print('   - Export Format: 1.0.0 (compatible with import)');
 
@@ -818,6 +838,7 @@ class SupabaseService {
         'wellness_data',
         'health_insights',
         'recommendations',
+        'genetic_insights',
         'daily_summaries',
         'data_sync_log',
       ];
@@ -856,7 +877,7 @@ class SupabaseService {
                 final oldDeviceId = recordMap['device_id'];
                 recordMap['device_id'] = actualDeviceIdMapping[oldDeviceId]!;
                 print(
-                  '� Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
+                  '✅ Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
                 );
               }
 
@@ -951,6 +972,7 @@ class SupabaseService {
         'daily_summaries',
         'recommendations',
         'health_insights',
+        'genetic_insights',
         'wellness_data',
         'body_measurements',
         'nutrition_data',

@@ -244,7 +244,9 @@ Always respond as if you're speaking directly to your client in a supportive con
     });
 
     try {
-      final prompts = await CustomPromptsService.getCustomPrompts('goal_setting');
+      final prompts = await CustomPromptsService.getCustomPrompts(
+        'goal_setting',
+      );
       setState(() {
         _savedPrompts = prompts;
         _promptStatus = 'Loaded ${prompts.length} saved prompts';
@@ -324,7 +326,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       _customPromptController.text = prompt.promptText;
       _promptStatus = 'Loaded prompt: ${prompt.promptName}';
     });
-    print('� Loaded prompt: ${prompt.promptName}');
+    print('✅ Loaded prompt: ${prompt.promptName}');
   }
 
   /// Delete a saved prompt
@@ -333,7 +335,9 @@ Always respond as if you're speaking directly to your client in a supportive con
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Prompt'),
-        content: Text('Are you sure you want to delete "${prompt.promptName}"?'),
+        content: Text(
+          'Are you sure you want to delete "${prompt.promptName}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -425,81 +429,10 @@ Always respond as if you're speaking directly to your client in a supportive con
     );
   }
 
-  /// Submit question with custom system prompt
-  Future<void> _submitQuestionCustom() async {
+  /// Submit question using prompt editor content with fallback to default
+  Future<void> _submitQuestionWithPromptEditor() async {
     final question = _questionController.text.trim();
-    final customPrompt = _customPromptController.text.trim();
-
-    if (question.isEmpty) {
-      print('❌ Custom question is empty');
-      return;
-    }
-
-    if (_selectedUser == null) {
-      print('❌ No user selected for context');
-      return;
-    }
-
-    setState(() {
-      _isAiProcessing = true;
-    });
-
-    try {
-      print('🔄 Submitting custom question: "$question"');
-      print('🔄 Using custom prompt: ${customPrompt.substring(0, 100)}...');
-      print('🔄 For user: ${_selectedUser!.friendlyName}');
-
-      // Add user question to history
-      _conversationHistory.add(
-        ChatMessage(message: question, isUser: true, timestamp: DateTime.now()),
-      );
-
-      // Clear the question input field
-      _questionController.clear();
-
-      final systemPrompt = _buildSystemPromptWithUserContext(
-        _selectedUser!,
-        customPrompt,
-      );
-
-      final response = await _callOpenAI(question, systemPrompt);
-
-      // Add AI response to history
-      _conversationHistory.add(
-        ChatMessage(
-          message: response,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
-
-      // Scroll to bottom to show new message
-      _scrollToBottom();
-
-      print('✅ Custom AI response received successfully');
-    } catch (e) {
-      print('❌ Error with custom AI request: $e');
-      // Add error to conversation history
-      _conversationHistory.add(
-        ChatMessage(
-          message: 'Sorry, there was an error processing your request: $e',
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
-
-      // Scroll to bottom to show new message
-      _scrollToBottom();
-    } finally {
-      setState(() {
-        _isAiProcessing = false;
-      });
-    }
-  }
-
-  /// Submit question using default system prompt
-  Future<void> _submitQuestion() async {
-    final question = _questionController.text.trim();
+    final promptEditorContent = _customPromptController.text.trim();
 
     if (question.isEmpty) {
       print('❌ Question is empty');
@@ -519,6 +452,37 @@ Always respond as if you're speaking directly to your client in a supportive con
       print('🔄 Submitting question: "$question"');
       print('🔄 For user: ${_selectedUser!.friendlyName}');
 
+      // Determine which prompt to use
+      String systemPrompt;
+      String promptSource;
+
+      if (promptEditorContent.isNotEmpty) {
+        systemPrompt = _buildSystemPromptWithUserContext(
+          _selectedUser!,
+          promptEditorContent,
+        );
+        promptSource = 'custom prompt editor';
+        print('🔄 Using custom prompt from editor');
+      } else {
+        systemPrompt = _buildSystemPromptWithUserContext(
+          _selectedUser!,
+          _defaultSystemPrompt,
+        );
+        promptSource = 'default system prompt';
+
+        // Show notification about using default prompt
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Using default system prompt (prompt editor was empty)',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        print('🔄 Using default system prompt (editor was empty)');
+      }
+
       // Add user question to history
       _conversationHistory.add(
         ChatMessage(message: question, isUser: true, timestamp: DateTime.now()),
@@ -526,11 +490,6 @@ Always respond as if you're speaking directly to your client in a supportive con
 
       // Clear the question input field
       _questionController.clear();
-
-      final systemPrompt = _buildSystemPromptWithUserContext(
-        _selectedUser!,
-        _defaultSystemPrompt,
-      );
 
       final response = await _callOpenAI(question, systemPrompt);
 
@@ -546,7 +505,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       // Scroll to bottom to show new message
       _scrollToBottom();
 
-      print('✅ AI response received successfully');
+      print('✅ AI response received successfully using $promptSource');
     } catch (e) {
       print('❌ Error with AI request: $e');
       // Add error to conversation history
@@ -565,6 +524,22 @@ Always respond as if you're speaking directly to your client in a supportive con
         _isAiProcessing = false;
       });
     }
+  }
+
+  /// Cancel current AI request
+  void _cancelAiRequest() {
+    // For now, just show a message since we can't actually cancel HTTP requests easily
+    // In a more advanced implementation, you could use a cancellation token
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Request cancellation requested - please wait for current request to complete',
+        ),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    print('🔄 AI request cancellation requested by user');
   }
 
   /// Build system prompt with user context
@@ -597,6 +572,17 @@ Always respond as if you're speaking directly to your client in a supportive con
 
   /// Call OpenAI API with ReAct pattern and MCP function calling
   Future<String> _callOpenAI(String userMessage, String systemPrompt) async {
+    print('🔍 _callOpenAI called with userMessage: "$userMessage"');
+    print(
+      '📝 Current conversation history length: ${_conversationHistory.length}',
+    );
+    for (int i = 0; i < _conversationHistory.length; i++) {
+      final msg = _conversationHistory[i];
+      final preview = msg.message.length > 30
+          ? msg.message.substring(0, 30) + '...'
+          : msg.message;
+      print('   History ${i + 1}: ${msg.isUser ? 'User' : 'AI'}: $preview');
+    }
     final apiKey = OpenAIConfig.apiKey;
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -626,79 +612,151 @@ Always respond as if you're speaking directly to your client in a supportive con
     // Initial conversation with system prompt and user message
     List<Map<String, dynamic>> messages = [
       {'role': 'system', 'content': systemPrompt},
-      {'role': 'user', 'content': userMessage},
     ];
 
-    try {
-      // Start ReAct conversation loop (max 5 iterations to prevent infinite loops)
-      for (int iteration = 0; iteration < 5; iteration++) {
-        print('🔄 ReAct iteration ${iteration + 1}');
+    // Add conversation history as context (exclude the most recent user message to avoid duplication)
+    List<ChatMessage> historyToInclude = [];
+    if (_conversationHistory.isNotEmpty) {
+      // If the last message is from the user (current question), exclude it from history
+      // since we'll add it separately as the current message
+      if (_conversationHistory.last.isUser) {
+        historyToInclude = _conversationHistory.length > 1
+            ? _conversationHistory.sublist(0, _conversationHistory.length - 1)
+            : [];
+      } else {
+        historyToInclude = _conversationHistory;
+      }
 
-        final body = json.encode({
-          'model': 'gpt-3.5-turbo',
-          'messages': messages,
-          'tools': tools,
-          'tool_choice': 'auto',
-          'max_tokens': 500,
-          'temperature': 0.7,
-        });
-
-        final response = await http.post(
-          Uri.parse(apiUrl),
-          headers: headers,
-          body: body,
+      // Limit to last 10 messages to avoid token limits
+      if (historyToInclude.length > 10) {
+        historyToInclude = historyToInclude.sublist(
+          historyToInclude.length - 10,
         );
+      }
+    }
 
-        if (response.statusCode != 200) {
-          print('OpenAI API Error: ${response.statusCode} - ${response.body}');
-          return 'Error: Unable to get AI response. Status: ${response.statusCode}';
-        }
+    if (historyToInclude.isNotEmpty) {
+      print(
+        '📚 Including ${historyToInclude.length} previous messages in AI context',
+      );
+      for (int i = 0; i < historyToInclude.length; i++) {
+        final chatMessage = historyToInclude[i];
+        final preview = chatMessage.message.length > 50
+            ? chatMessage.message.substring(0, 50) + '...'
+            : chatMessage.message;
+        print('   ${i + 1}. ${chatMessage.isUser ? 'User' : 'AI'}: $preview');
+      }
+    }
 
-        final data = json.decode(response.body);
-        final choice = data['choices'][0];
-        final message = choice['message'];
+    for (final chatMessage in historyToInclude) {
+      messages.add({
+        'role': chatMessage.isUser ? 'user' : 'assistant',
+        'content': chatMessage.message,
+      });
+    }
 
-        // Add AI response to conversation
-        messages.add(message);
+    // Add the current user message
+    messages.add({'role': 'user', 'content': userMessage});
 
-        // Check if AI wants to call a tool
-        if (message['tool_calls'] != null && message['tool_calls'].isNotEmpty) {
-          final toolCalls = message['tool_calls'] as List;
+    print('📤 Final messages being sent to OpenAI:');
+    for (int i = 0; i < messages.length; i++) {
+      final msg = messages[i];
+      final content = msg['content'] as String;
+      final preview = content.length > 50
+          ? content.substring(0, 50) + '...'
+          : content;
+      print('   ${i + 1}. ${msg['role']}: $preview');
+    }
 
-          // Process each tool call
-          for (final toolCall in toolCalls) {
-            final toolCallId = toolCall['id'];
-            final function = toolCall['function'];
-            final functionName = function['name'];
-            final functionArgs = json.decode(function['arguments']);
+    try {
+      // For simple conversation memory, make a single API call with full context
+      print('🔄 Making single API call with conversation context');
 
-            print(
-              '🔧 AI is calling function: $functionName with args: $functionArgs',
-            );
+      final body = json.encode({
+        'model': 'gpt-3.5-turbo',
+        'messages': messages,
+        'tools': tools,
+        'tool_choice': 'auto',
+        'max_tokens': 500,
+        'temperature': 0.7,
+      });
 
-            // Call the appropriate MCP function
-            String functionResult = await _executeMCPFunction(
-              functionName,
-              functionArgs,
-            );
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: headers,
+        body: body,
+      );
 
-            // Add function result to conversation
-            messages.add({
-              'role': 'tool',
-              'tool_call_id': toolCallId,
-              'content': functionResult,
-            });
+      if (response.statusCode != 200) {
+        print('OpenAI API Error: ${response.statusCode} - ${response.body}');
+        return 'Error: Unable to get AI response. Status: ${response.statusCode}';
+      }
 
-            print(
-              '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
-            );
+      final data = json.decode(response.body);
+      final choice = data['choices'][0];
+      final message = choice['message'];
+
+      // Check if AI wants to call a tool
+      if (message['tool_calls'] != null && message['tool_calls'].isNotEmpty) {
+        final toolCalls = message['tool_calls'] as List;
+
+        // Process each tool call
+        for (final toolCall in toolCalls) {
+          final toolCallId = toolCall['id'];
+          final function = toolCall['function'];
+          final functionName = function['name'];
+          final functionArgs = json.decode(function['arguments']);
+
+          print(
+            '🔧 AI is calling function: $functionName with args: $functionArgs',
+          );
+
+          // Call the appropriate MCP function
+          String functionResult = await _executeMCPFunction(
+            functionName,
+            functionArgs,
+          );
+
+          // Make a follow-up call with the tool result
+          messages.add(message); // Add AI's tool call message
+          messages.add({
+            'role': 'tool',
+            'tool_call_id': toolCallId,
+            'content': functionResult,
+          });
+
+          print(
+            '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
+          );
+
+          // Make follow-up call to get final response
+          final followUpBody = json.encode({
+            'model': 'gpt-3.5-turbo',
+            'messages': messages,
+            'max_tokens': 500,
+            'temperature': 0.7,
+          });
+
+          final followUpResponse = await http.post(
+            Uri.parse(apiUrl),
+            headers: headers,
+            body: followUpBody,
+          );
+
+          if (followUpResponse.statusCode == 200) {
+            final followUpData = json.decode(followUpResponse.body);
+            final followUpChoice = followUpData['choices'][0];
+            final finalResponse =
+                followUpChoice['message']['content'] ?? 'No response';
+            print('✅ AI provided final response after tool call');
+            return finalResponse;
           }
-        } else {
-          // AI provided final response without tool call
-          final finalResponse = message['content'] ?? 'No response';
-          print('✅ AI provided final response');
-          return finalResponse;
         }
+      } else {
+        // AI provided final response without tool call
+        final finalResponse = message['content'] ?? 'No response';
+        print('✅ AI provided final response');
+        return finalResponse;
       }
 
       return 'I gathered some health data but ran into processing limits. Please try asking a more specific question.';
@@ -790,24 +848,22 @@ Always respond as if you're speaking directly to your client in a supportive con
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Left column - User selection and custom prompt
+        // Left column - Custom prompt (more space now)
         Expanded(
           flex: 1,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildUserSelectionCard(),
-              const SizedBox(height: 16),
-              Expanded(child: _buildCustomPromptCard()),
-            ],
+            children: [Expanded(child: _buildCustomPromptCard())],
           ),
         ),
         const SizedBox(width: 24),
-        // Right column - Conversation history and question input
+        // Right column - User selection, conversation history and question input
         Expanded(
           flex: 1,
           child: Column(
             children: [
+              _buildUserSelectionCard(),
+              const SizedBox(height: 16),
               Expanded(child: _buildConversationHistoryCard()),
               const SizedBox(height: 16),
               _buildQuestionInputCard(),
@@ -869,7 +925,9 @@ Always respond as if you're speaking directly to your client in a supportive con
               ),
             const SizedBox(height: 8),
             DropdownButtonFormField<UserModel>(
-              initialValue: _users.contains(_selectedUser) ? _selectedUser : null,
+              initialValue: _users.contains(_selectedUser)
+                  ? _selectedUser
+                  : null,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(
@@ -894,6 +952,8 @@ Always respond as if you're speaking directly to your client in a supportive con
               onChanged: (UserModel? newValue) {
                 setState(() {
                   _selectedUser = newValue;
+                  // Clear conversation history when switching users
+                  _conversationHistory.clear();
                   // Initialize MCP service for the selected user
                   if (newValue != null) {
                     _mcpService = MCPClientService(userId: newValue.id);
@@ -902,9 +962,25 @@ Always respond as if you're speaking directly to your client in a supportive con
                         print(
                           '✅ MCP service initialized for user: ${newValue.friendlyName}',
                         );
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Switched to user: ${newValue.friendlyName}',
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
                       } else {
                         print(
                           '❌ Failed to initialize MCP service for user: ${newValue.friendlyName}',
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to initialize user context'),
+                            backgroundColor: Colors.red,
+                          ),
                         );
                       }
                     });
@@ -973,7 +1049,7 @@ Always respond as if you're speaking directly to your client in a supportive con
                   child: ElevatedButton(
                     onPressed: _isAiProcessing || _selectedUser == null
                         ? null
-                        : _submitQuestion,
+                        : _submitQuestionWithPromptEditor,
                     child: _isAiProcessing
                         ? const SizedBox(
                             width: 16,
@@ -984,16 +1060,21 @@ Always respond as if you're speaking directly to your client in a supportive con
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isAiProcessing || _selectedUser == null
-                        ? null
-                        : _submitQuestionCustom,
-                    icon: const Icon(Icons.psychology, size: 16),
-                    label: const Text('Ask Health AI Custom'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple.shade100,
-                      foregroundColor: Colors.purple.shade700,
+                SizedBox(
+                  width: 100,
+                  child: TextButton(
+                    onPressed: _isAiProcessing ? _cancelAiRequest : null,
+                    style: TextButton.styleFrom(
+                      backgroundColor: _isAiProcessing
+                          ? Colors.red.shade100
+                          : Colors.grey.shade200,
+                      foregroundColor: _isAiProcessing
+                          ? Colors.red.shade700
+                          : Colors.grey.shade500,
+                    ),
+                    child: Text(
+                      _isAiProcessing ? 'Cancel' : 'Cancel',
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ),
@@ -1036,7 +1117,10 @@ Always respond as if you're speaking directly to your client in a supportive con
             // Status message
             if (_promptStatus.isNotEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _promptStatus.contains('Error')
                       ? Colors.red.shade50
@@ -1175,7 +1259,10 @@ Always respond as if you're speaking directly to your client in a supportive con
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Enter a name for this prompt...',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -1285,13 +1372,46 @@ Always respond as if you're speaking directly to your client in a supportive con
                   'Conversation History:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
+                if (_conversationHistory.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${_conversationHistory.length} msg${_conversationHistory.length == 1 ? '' : 's'} in context',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 const Spacer(),
                 if (_conversationHistory.isNotEmpty)
                   TextButton.icon(
                     onPressed: () {
                       setState(() {
                         _conversationHistory.clear();
+                        print(
+                          '🧹 Conversation history cleared - AI context reset',
+                        );
                       });
+                      // Show confirmation message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Conversation history cleared - AI context reset',
+                          ),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.delete, size: 16),
                     label: const Text('Clear'),
