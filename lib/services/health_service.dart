@@ -1,5 +1,6 @@
 import 'package:health/health.dart';
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 
 /// Abstract interface for health data operations (Interface Segregation)
 abstract class HealthDataService {
@@ -63,12 +64,16 @@ class HealthService implements HealthDataService {
         _connectionMethod = 'Basic hasPermissions() check';
         _isAvailable = true;
         _isInitialized = true;
-        print(
-          '✅ $platformName availability confirmed via hasPermissions() - result: $hasPerms',
-        );
+        if (kDebugMode) {
+          print(
+            '✅ $platformName availability confirmed via hasPermissions() - result: $hasPerms',
+          );
+        }
         return true;
       } catch (e) {
-        print('hasPermissions() check failed: $e');
+        if (kDebugMode) {
+          print('hasPermissions() check failed: $e');
+        }
       }
 
       // Method 2: Try a basic data query
@@ -85,10 +90,14 @@ class HealthService implements HealthDataService {
         _connectionMethod = 'Direct data query test';
         _isAvailable = true;
         _isInitialized = true;
-        print('✅ $platformName availability confirmed via data query test');
+        if (kDebugMode) {
+          print('✅ $platformName availability confirmed via data query test');
+        }
         return true;
       } catch (e) {
-        print('Data query test failed: $e');
+        if (kDebugMode) {
+          print('Data query test failed: $e');
+        }
       }
 
       // If we get here, health service might not be available
@@ -97,7 +106,9 @@ class HealthService implements HealthDataService {
       _isInitialized = true;
       return false;
     } catch (e) {
-      print('Error initializing $platformName: $e');
+      if (kDebugMode) {
+        print('Error initializing $platformName: $e');
+      }
       _connectionMethod = 'Initialization error: $e';
       _isAvailable = false;
       _isInitialized = true;
@@ -111,7 +122,9 @@ class HealthService implements HealthDataService {
       bool? hasPermissions = await _health.hasPermissions(_types);
       return hasPermissions ?? false;
     } catch (e) {
-      print('Error checking permissions: $e');
+      if (kDebugMode) {
+        print('Error checking permissions: $e');
+      }
       return false;
     }
   }
@@ -122,7 +135,9 @@ class HealthService implements HealthDataService {
       // Try multiple permission request methods and track which one works
       return await _tryMultiplePermissionMethods();
     } catch (e) {
-      print('Error requesting permissions: $e');
+      if (kDebugMode) {
+        print('Error requesting permissions: $e');
+      }
       _connectionMethod = 'Permission request failed: $e';
       return false;
     }
@@ -131,39 +146,53 @@ class HealthService implements HealthDataService {
   Future<bool> _tryMultiplePermissionMethods() async {
     // Method 1: Standard authorization request
     try {
-      print('🔄 Trying Method 1: Standard requestAuthorization(READ)');
+      if (kDebugMode) {
+        print('🔄 Trying Method 1: Standard requestAuthorization(READ)');
+      }
       bool requested = await _health.requestAuthorization(
         _types,
         permissions: [HealthDataAccess.READ],
       );
       if (requested) {
         _connectionMethod = 'Method 1: Standard requestAuthorization(READ)';
-        print('✅ SUCCESS: Method 1 worked!');
+        if (kDebugMode) {
+          print('✅ SUCCESS: Method 1 worked!');
+        }
         return true;
       }
     } catch (e) {
-      print('Method 1 failed: $e');
+      if (kDebugMode) {
+        print('Method 1 failed: $e');
+      }
     }
 
     // Method 2: Try with different permission setup
     try {
-      print('🔄 Trying Method 2: requestAuthorization(READ_WRITE)');
+      if (kDebugMode) {
+        print('🔄 Trying Method 2: requestAuthorization(READ_WRITE)');
+      }
       bool requested = await _health.requestAuthorization(
         _types,
         permissions: [HealthDataAccess.READ_WRITE],
       );
       if (requested) {
         _connectionMethod = 'Method 2: requestAuthorization(READ_WRITE)';
-        print('✅ SUCCESS: Method 2 worked!');
+        if (kDebugMode) {
+          print('✅ SUCCESS: Method 2 worked!');
+        }
         return true;
       }
     } catch (e) {
-      print('Method 2 failed: $e');
+      if (kDebugMode) {
+        print('Method 2 failed: $e');
+      }
     }
 
     // Method 3: Try direct data access to trigger permission dialog
     try {
-      print('🔄 Trying Method 3: Direct data access trigger');
+      if (kDebugMode) {
+        print('🔄 Trying Method 3: Direct data access trigger');
+      }
       final now = DateTime.now();
       final startOfDay = DateTime(now.year, now.month, now.day);
 
@@ -175,16 +204,22 @@ class HealthService implements HealthDataService {
 
       _connectionMethod =
           'Method 3: Direct data access trigger (${testData.length} points)';
-      print(
-        '✅ SUCCESS: Method 3 worked - found ${testData.length} data points',
-      );
+      if (kDebugMode) {
+        print(
+          '✅ SUCCESS: Method 3 worked - found ${testData.length} data points',
+        );
+      }
       return true;
     } catch (e) {
-      print('Method 3 failed: $e');
+      if (kDebugMode) {
+        print('Method 3 failed: $e');
+      }
     }
 
     _connectionMethod = 'All permission methods failed';
-    print('❌ All permission methods failed');
+    if (kDebugMode) {
+      print('❌ All permission methods failed');
+    }
     return false;
   }
 
@@ -212,7 +247,9 @@ class HealthService implements HealthDataService {
 
       return totalSteps;
     } catch (e) {
-      print('Error fetching today\'s steps: $e');
+      if (kDebugMode) {
+        print('Error fetching today\'s steps: $e');
+      }
       return 0;
     }
   }
@@ -226,7 +263,9 @@ class HealthService implements HealthDataService {
   Future<void> openHealthSettings() async {
     // Note: The health plugin doesn't provide a direct method to open settings
     // This would need platform-specific implementation
-    print('Opening health settings - feature not available in health plugin');
+    if (kDebugMode) {
+      print('Opening health settings - feature not available in health plugin');
+    }
 
     // For future implementation, we could use url_launcher or app_settings
     // to open specific health settings pages
@@ -273,7 +312,9 @@ class HealthService implements HealthDataService {
 
         results.add(HealthStepData(date: currentDate, stepCount: dailySteps));
       } catch (e) {
-        print('Error processing date $currentDate: $e');
+        if (kDebugMode) {
+          print('Error processing date $currentDate: $e');
+        }
         results.add(HealthStepData(date: currentDate, stepCount: 0));
       }
 

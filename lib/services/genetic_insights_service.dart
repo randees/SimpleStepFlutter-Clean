@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'supabase_service.dart';
 import '../models/genetic_insight.dart';
 
@@ -6,9 +7,11 @@ class GeneticInsightsService {
   /// Get all genetic insights for a specific user
   static Future<List<GeneticInsight>> getGeneticInsights(String userId) async {
     try {
-      print(
-        '🔄 GeneticInsightsService: Fetching genetic insights for user: $userId',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 GeneticInsightsService: Fetching genetic insights for user: $userId',
+        );
+      }
 
       final response = await SupabaseService.client
           .from('genetic_insights')
@@ -20,12 +23,16 @@ class GeneticInsightsService {
         response.map((item) => GeneticInsight.fromJson(item)),
       );
 
-      print(
-        '✅ GeneticInsightsService: Retrieved ${insights.length} genetic insights',
-      );
+      if (kDebugMode) {
+        print(
+          '✅ GeneticInsightsService: Retrieved ${insights.length} genetic insights',
+        );
+      }
       return insights;
     } catch (e) {
-      print('❌ GeneticInsightsService: Error fetching genetic insights: $e');
+      if (kDebugMode) {
+        print('❌ GeneticInsightsService: Error fetching genetic insights: $e');
+      }
       return [];
     }
   }
@@ -33,7 +40,9 @@ class GeneticInsightsService {
   /// Get a specific genetic insight by ID
   static Future<GeneticInsight?> getGeneticInsight(String insightId) async {
     try {
-      print('🔄 GeneticInsightsService: Fetching genetic insight: $insightId');
+      if (kDebugMode) {
+        print('🔄 GeneticInsightsService: Fetching genetic insight: $insightId');
+      }
 
       final response = await SupabaseService.client
           .from('genetic_insights')
@@ -42,18 +51,24 @@ class GeneticInsightsService {
           .maybeSingle();
 
       if (response != null) {
-        print(
-          '✅ GeneticInsightsService: Retrieved genetic insight: $insightId',
-        );
+        if (kDebugMode) {
+          print(
+            '✅ GeneticInsightsService: Retrieved genetic insight: $insightId',
+          );
+        }
         return GeneticInsight.fromJson(response);
       } else {
-        print(
-          '⚠️ GeneticInsightsService: Genetic insight not found: $insightId',
-        );
+        if (kDebugMode) {
+          print(
+            '⚠️ GeneticInsightsService: Genetic insight not found: $insightId',
+          );
+        }
         return null;
       }
     } catch (e) {
-      print('❌ GeneticInsightsService: Error fetching genetic insight: $e');
+      if (kDebugMode) {
+        print('❌ GeneticInsightsService: Error fetching genetic insight: $e');
+      }
       return null;
     }
   }
@@ -65,9 +80,11 @@ class GeneticInsightsService {
     Map<String, dynamic>? metaData,
   }) async {
     try {
-      print(
-        '🔄 GeneticInsightsService: Creating genetic insight for user: $userId',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 GeneticInsightsService: Creating genetic insight for user: $userId',
+        );
+      }
 
       final response = await SupabaseService.client
           .from('genetic_insights')
@@ -75,15 +92,19 @@ class GeneticInsightsService {
           .select()
           .single();
 
-      print(
-        '✅ GeneticInsightsService: Created genetic insight for user: $userId',
-      );
+      if (kDebugMode) {
+        print(
+          '✅ GeneticInsightsService: Created genetic insight for user: $userId',
+        );
+      }
       return GeneticInsight.fromJson(response);
     } catch (e) {
-      print('❌ GeneticInsightsService: Error creating genetic insight: $e');
-      print('❌ Error type: ${e.runtimeType}');
-      if (e is Exception) {
-        print('❌ Error message: ${e.toString()}');
+      if (kDebugMode) {
+        print('❌ GeneticInsightsService: Error creating genetic insight: $e');
+        print('❌ Error type: ${e.runtimeType}');
+        if (e is Exception) {
+          print('❌ Error message: ${e.toString()}');
+        }
       }
       return null;
     }
@@ -96,7 +117,9 @@ class GeneticInsightsService {
     Map<String, dynamic>? metaData,
   }) async {
     try {
-      print('🔄 GeneticInsightsService: Updating genetic insight: $insightId');
+      if (kDebugMode) {
+        print('🔄 GeneticInsightsService: Updating genetic insight: $insightId');
+      }
 
       final updateData = <String, dynamic>{};
       if (data != null) {
@@ -107,9 +130,11 @@ class GeneticInsightsService {
       }
 
       if (updateData.isEmpty) {
-        print(
-          '⚠️ GeneticInsightsService: No data to update for insight: $insightId',
-        );
+        if (kDebugMode) {
+          print(
+            '⚠️ GeneticInsightsService: No data to update for insight: $insightId',
+          );
+        }
         return null;
       }
 
@@ -120,10 +145,14 @@ class GeneticInsightsService {
           .select()
           .single();
 
-      print('✅ GeneticInsightsService: Updated genetic insight: $insightId');
+      if (kDebugMode) {
+        print('✅ GeneticInsightsService: Updated genetic insight: $insightId');
+      }
       return GeneticInsight.fromJson(response);
     } catch (e) {
-      print('❌ GeneticInsightsService: Error updating genetic insight: $e');
+      if (kDebugMode) {
+        print('❌ GeneticInsightsService: Error updating genetic insight: $e');
+      }
       return null;
     }
   }
@@ -131,17 +160,23 @@ class GeneticInsightsService {
   /// Delete a genetic insight
   static Future<bool> deleteGeneticInsight(String insightId) async {
     try {
-      print('🔄 GeneticInsightsService: Deleting genetic insight: $insightId');
+      if (kDebugMode) {
+        print('🔄 GeneticInsightsService: Deleting genetic insight: $insightId');
+      }
 
       await SupabaseService.client
           .from('genetic_insights')
           .delete()
           .eq('id', insightId);
 
-      print('✅ GeneticInsightsService: Deleted genetic insight: $insightId');
+      if (kDebugMode) {
+        print('✅ GeneticInsightsService: Deleted genetic insight: $insightId');
+      }
       return true;
     } catch (e) {
-      print('❌ GeneticInsightsService: Error deleting genetic insight: $e');
+      if (kDebugMode) {
+        print('❌ GeneticInsightsService: Error deleting genetic insight: $e');
+      }
       return false;
     }
   }
@@ -149,9 +184,11 @@ class GeneticInsightsService {
   /// Get the most recent genetic insight for a user
   static Future<GeneticInsight?> getLatestGeneticInsight(String userId) async {
     try {
-      print(
-        '🔄 GeneticInsightsService: Fetching latest genetic insight for user: $userId',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 GeneticInsightsService: Fetching latest genetic insight for user: $userId',
+        );
+      }
 
       final response = await SupabaseService.client
           .from('genetic_insights')
@@ -162,20 +199,26 @@ class GeneticInsightsService {
           .maybeSingle();
 
       if (response != null) {
-        print(
-          '✅ GeneticInsightsService: Retrieved latest genetic insight for user: $userId',
-        );
+        if (kDebugMode) {
+          print(
+            '✅ GeneticInsightsService: Retrieved latest genetic insight for user: $userId',
+          );
+        }
         return GeneticInsight.fromJson(response);
       } else {
-        print(
-          '⚠️ GeneticInsightsService: No genetic insights found for user: $userId',
-        );
+        if (kDebugMode) {
+          print(
+            '⚠️ GeneticInsightsService: No genetic insights found for user: $userId',
+          );
+        }
         return null;
       }
     } catch (e) {
-      print(
-        '❌ GeneticInsightsService: Error fetching latest genetic insight: $e',
-      );
+      if (kDebugMode) {
+        print(
+          '❌ GeneticInsightsService: Error fetching latest genetic insight: $e',
+        );
+      }
       return null;
     }
   }
@@ -187,9 +230,11 @@ class GeneticInsightsService {
     DateTime endDate,
   ) async {
     try {
-      print(
-        '🔄 GeneticInsightsService: Fetching genetic insights for user: $userId between ${startDate.toIso8601String()} and ${endDate.toIso8601String()}',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 GeneticInsightsService: Fetching genetic insights for user: $userId between ${startDate.toIso8601String()} and ${endDate.toIso8601String()}',
+        );
+      }
 
       final response = await SupabaseService.client
           .from('genetic_insights')
@@ -203,14 +248,18 @@ class GeneticInsightsService {
         response.map((item) => GeneticInsight.fromJson(item)),
       );
 
-      print(
-        '✅ GeneticInsightsService: Retrieved ${insights.length} genetic insights in date range',
-      );
+      if (kDebugMode) {
+        print(
+          '✅ GeneticInsightsService: Retrieved ${insights.length} genetic insights in date range',
+        );
+      }
       return insights;
     } catch (e) {
-      print(
-        '❌ GeneticInsightsService: Error fetching genetic insights in date range: $e',
-      );
+      if (kDebugMode) {
+        print(
+          '❌ GeneticInsightsService: Error fetching genetic insights in date range: $e',
+        );
+      }
       return [];
     }
   }

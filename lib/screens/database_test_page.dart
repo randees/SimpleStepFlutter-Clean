@@ -97,15 +97,29 @@ class _DatabaseTestPageState extends State<DatabaseTestPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 900;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final isWideScreen = screenWidth > 800; // Consistent breakpoint
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isWideScreen ? _buildWideLayout() : _buildNarrowLayout(),
-      ),
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: Padding(
+              key: ValueKey(isWideScreen), // Key changes when layout mode changes
+              padding: const EdgeInsets.all(16.0),
+              child: isWideScreen ? _buildWideLayout() : _buildNarrowLayout(),
+            ),
+          ),
+        );
+      },
     );
   }
 

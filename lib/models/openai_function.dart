@@ -210,6 +210,31 @@ class HealthDataFunctions {
     );
   }
 
+  static OpenAIFunction getGeneticInsights() {
+    return OpenAIFunction(
+      name: 'get_genetic_insights',
+      description:
+          'Get genetic insights and personalized health recommendations based on genetic data analysis. Includes genetic factors affecting metabolism, fitness response, nutrition needs, and health predispositions.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'userId': {'type': 'string', 'description': 'User ID to analyze'},
+          'insightType': {
+            'type': 'string',
+            'description':
+                'Specific type of genetic insight to retrieve (optional): metabolism, fitness, nutrition, health_risks, all',
+          },
+          'limit': {
+            'type': 'number',
+            'default': 10,
+            'description': 'Maximum number of genetic insights to return (default: 10)',
+          },
+        },
+        'required': ['userId'],
+      },
+    );
+  }
+
   static List<OpenAIFunction> getAllFunctions() {
     return [
       getStepSummary(),
@@ -220,6 +245,7 @@ class HealthDataFunctions {
       getNutritionAnalysis(),
       getWellnessMetrics(),
       getHealthInsights(),
+      getGeneticInsights(),
     ];
   }
 }

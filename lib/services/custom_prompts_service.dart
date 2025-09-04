@@ -1,5 +1,6 @@
 import 'supabase_service.dart';
 import '../models/custom_ai_prompt.dart';
+import 'package:flutter/foundation.dart';
 
 /// Service for managing custom AI prompts
 class CustomPromptsService {
@@ -15,7 +16,9 @@ class CustomPromptsService {
         response.map((item) => PromptType.fromMap(item)),
       );
     } catch (e) {
-      print('Error fetching prompt types: $e');
+      if (kDebugMode) {
+        print('Error fetching prompt types: $e');
+      }
       return [];
     }
   }
@@ -25,9 +28,11 @@ class CustomPromptsService {
     String promptTypeId,
   ) async {
     try {
-      print(
-        '🔄 CustomPromptsService: Fetching prompts for type: $promptTypeId',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 CustomPromptsService: Fetching prompts for type: $promptTypeId',
+        );
+      }
 
       // Use admin client to bypass RLS for custom prompts (they're system-level)
       final response = await SupabaseService.adminClient
@@ -40,10 +45,14 @@ class CustomPromptsService {
         response.map((item) => CustomAiPrompt.fromMap(item)),
       );
 
-      print('✅ CustomPromptsService: Retrieved ${prompts.length} prompts');
+      if (kDebugMode) {
+        print('✅ CustomPromptsService: Retrieved ${prompts.length} prompts');
+      }
       return prompts;
     } catch (e) {
-      print('❌ CustomPromptsService: Error fetching prompts: $e');
+      if (kDebugMode) {
+        print('❌ CustomPromptsService: Error fetching prompts: $e');
+      }
       return [];
     }
   }
@@ -61,7 +70,9 @@ class CustomPromptsService {
         response.map((item) => CustomAiPrompt.fromMap(item)),
       );
     } catch (e) {
-      print('Error fetching all custom prompts: $e');
+      if (kDebugMode) {
+        print('Error fetching all custom prompts: $e');
+      }
       return [];
     }
   }
@@ -79,7 +90,9 @@ class CustomPromptsService {
 
       return response != null ? CustomAiPrompt.fromMap(response) : null;
     } catch (e) {
-      print('Error fetching default prompt: $e');
+      if (kDebugMode) {
+        print('Error fetching default prompt: $e');
+      }
       return null;
     }
   }
@@ -91,9 +104,11 @@ class CustomPromptsService {
     required String promptName,
   }) async {
     try {
-      print(
-        '🔄 CustomPromptsService: Creating prompt "$promptName" for type: $promptTypeId',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 CustomPromptsService: Creating prompt "$promptName" for type: $promptTypeId',
+        );
+      }
 
       // Use admin client to bypass RLS for custom prompts (they're system-level)
       final response = await SupabaseService.adminClient
@@ -106,13 +121,17 @@ class CustomPromptsService {
           .select('*, prompt_type!inner(*)')
           .single();
 
-      print('✅ Created custom prompt "$promptName" for type: $promptTypeId');
+      if (kDebugMode) {
+        print('✅ Created custom prompt "$promptName" for type: $promptTypeId');
+      }
       return CustomAiPrompt.fromMap(response);
     } catch (e) {
-      print('❌ Error creating custom prompt: $e');
-      print('❌ Error type: ${e.runtimeType}');
-      if (e is Exception) {
-        print('❌ Error message: ${e.toString()}');
+      if (kDebugMode) {
+        print('❌ Error creating custom prompt: $e');
+        print('❌ Error type: ${e.runtimeType}');
+        if (e is Exception) {
+          print('❌ Error message: ${e.toString()}');
+        }
       }
       return null;
     }
@@ -125,7 +144,9 @@ class CustomPromptsService {
     String? promptName,
   }) async {
     try {
-      print('🔄 CustomPromptsService: Updating prompt $promptId');
+      if (kDebugMode) {
+        print('🔄 CustomPromptsService: Updating prompt $promptId');
+      }
 
       // Use admin client to bypass RLS for custom prompts (they're system-level)
       final updateData = {'prompt_text': promptText};
@@ -140,10 +161,14 @@ class CustomPromptsService {
           .select('*, prompt_type!inner(*)')
           .single();
 
-      print('✅ Updated custom prompt: $promptId');
+      if (kDebugMode) {
+        print('✅ Updated custom prompt: $promptId');
+      }
       return CustomAiPrompt.fromMap(response);
     } catch (e) {
-      print('❌ Error updating custom prompt: $e');
+      if (kDebugMode) {
+        print('❌ Error updating custom prompt: $e');
+      }
       return null;
     }
   }
@@ -151,7 +176,9 @@ class CustomPromptsService {
   /// Delete a custom prompt
   static Future<bool> deleteCustomPrompt(String promptId) async {
     try {
-      print('🔄 CustomPromptsService: Deleting prompt $promptId');
+      if (kDebugMode) {
+        print('🔄 CustomPromptsService: Deleting prompt $promptId');
+      }
 
       // Use admin client to bypass RLS for custom prompts (they're system-level)
       await SupabaseService.adminClient
@@ -159,10 +186,14 @@ class CustomPromptsService {
           .delete()
           .eq('id', promptId);
 
-      print('✅ Deleted custom prompt: $promptId');
+      if (kDebugMode) {
+        print('✅ Deleted custom prompt: $promptId');
+      }
       return true;
     } catch (e) {
-      print('❌ Error deleting custom prompt: $e');
+      if (kDebugMode) {
+        print('❌ Error deleting custom prompt: $e');
+      }
       return false;
     }
   }
