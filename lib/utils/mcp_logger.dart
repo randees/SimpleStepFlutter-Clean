@@ -5,11 +5,14 @@ class MCPLogger {
 
   static void info(String message, {String? tag}) {
     final logTag = tag != null ? '$_prefix.$tag' : _prefix;
+    // Log to both Flutter DevTools and browser console
     developer.log(
       message,
       name: logTag,
       level: 800, // Info level
     );
+    // Also log to console for browser debugging
+    print('[$logTag] $message');
   }
 
   static void warning(String message, {String? tag}) {
@@ -19,6 +22,7 @@ class MCPLogger {
       name: logTag,
       level: 900, // Warning level
     );
+    print('⚠️ [$logTag] $message');
   }
 
   static void error(
@@ -35,6 +39,9 @@ class MCPLogger {
       error: error,
       stackTrace: stackTrace,
     );
+    print('❌ [$logTag] $message');
+    if (error != null) print('   Error: $error');
+    if (stackTrace != null) print('   Stack: $stackTrace');
   }
 
   static void debug(String message, {String? tag}) {
@@ -44,6 +51,7 @@ class MCPLogger {
       name: logTag,
       level: 700, // Debug level
     );
+    print('🔍 [$logTag] $message');
   }
 
   // Specific logging methods for MCP operations

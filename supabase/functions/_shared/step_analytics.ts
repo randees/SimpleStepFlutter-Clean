@@ -19,33 +19,48 @@ export async function getStepSummary(
 ): Promise<StepSummary> {
   const supabase = createClient(supabaseUrl, supabaseKey)
   
-  // Query step data from existing step_data table
+  console.log(`🔍 Step Analytics Debug:`)
+  console.log(`   User ID: ${userId}`)
+  console.log(`   Date Range: ${startDate} to ${endDate}`)
+  
+  // Query step data from existing activity_data table
+  // Include all activity types that have steps data, not just 'steps' type
   const { data: stepData, error } = await supabase
-    .from('step_data')
-    .select('*')
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: true })
+    .from('activity_data')
+    .select('start_time, steps, activity_type')
+    .eq('user_id', userId)
+    .not('steps', 'is', null)  // Only get records that have steps data
+    .gte('start_time', startDate)
+    .lte('start_time', endDate + 'T23:59:59')
+    .order('start_time', { ascending: true })
 
   if (error) {
+    console.error(`❌ Step Analytics Error: ${error.message}`)
     throw new Error(`Failed to fetch step data: ${error.message}`)
+  }
+
+  console.log(`📊 Query Results:`)
+  console.log(`   Records found: ${stepData?.length || 0}`)
+  if (stepData && stepData.length > 0) {
+    console.log(`   Sample record:`, stepData[0])
+    console.log(`   Date range in data: ${stepData[0].start_time} to ${stepData[stepData.length - 1].start_time}`)
   }
 
   // Calculate analytics
   const steps = stepData || []
-  const totalSteps = steps.reduce((sum, day) => sum + (day.step_count || 0), 0)
+  const totalSteps = steps.reduce((sum, day) => sum + (day.steps || 0), 0)
   const averageSteps = steps.length > 0 ? Math.round(totalSteps / steps.length) : 0
   
   // Find most and least active days
-  const sortedBySteps = [...steps].sort((a, b) => (b.step_count || 0) - (a.step_count || 0))
+  const sortedBySteps = [...steps].sort((a, b) => (b.steps || 0) - (a.steps || 0))
   const mostActiveDay = sortedBySteps[0] ? { 
-    date: sortedBySteps[0].date, 
-    steps: sortedBySteps[0].step_count || 0 
+    date: sortedBySteps[0].start_time.split('T')[0], 
+    steps: sortedBySteps[0].steps || 0 
   } : { date: '', steps: 0 }
   
   const leastActiveDay = sortedBySteps[sortedBySteps.length - 1] ? {
-    date: sortedBySteps[sortedBySteps.length - 1].date,
-    steps: sortedBySteps[sortedBySteps.length - 1].step_count || 0
+    date: sortedBySteps[sortedBySteps.length - 1].start_time.split('T')[0],
+    steps: sortedBySteps[sortedBySteps.length - 1].steps || 0
   } : { date: '', steps: 0 }
 
   // Calculate weekly pattern (day of week averages)
@@ -53,11 +68,11 @@ export async function getStepSummary(
   const dayTotals: { [key: string]: { total: number; count: number } } = {}
   
   steps.forEach(day => {
-    const dayOfWeek = new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })
+    const dayOfWeek = new Date(day.start_time).toLocaleDateString('en-US', { weekday: 'long' })
     if (!dayTotals[dayOfWeek]) {
       dayTotals[dayOfWeek] = { total: 0, count: 0 }
     }
-    dayTotals[dayOfWeek].total += day.step_count || 0
+    dayTotals[dayOfWeek].total += day.steps || 0
     dayTotals[dayOfWeek].count += 1
   })
 
@@ -71,18 +86,19 @@ export async function getStepSummary(
     mostActiveDay,
     leastActiveDay,
     weeklyPattern,
-    dailyData: steps.map(d => ({ date: d.date, steps: d.step_count || 0 }))
+    dailyData: steps.map(d => ({ date: d.start_time.split('T')[0], steps: d.steps || 0 }))
   }
 }
 
 export async function getActivityPatterns(
   supabaseUrl: string,
   supabaseKey: string,
+  userId: string,
   days: number = 30
 ): Promise<StepSummary> {
   const endDate = new Date().toISOString().split('T')[0]
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   
-  // For existing step_data table, we don't need userId parameter
-  return await getStepSummary(supabaseUrl, supabaseKey, '', startDate, endDate)
+  // Use proper userId for activity_data table
+  return await getStepSummary(supabaseUrl, supabaseKey, userId, startDate, endDate)
 }

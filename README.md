@@ -1,6 +1,36 @@
-# íº€ Simple Step Flutter - Health Tracking App
+# ï¿½ï¿½ï¿½ Simple Step Flutter - Health Tracking App
 
-A comprehensive Flutter application for health data tracking with AI-powered analytics, built with Supabase backend and OpenAI integration.
+A c4. **Run the application**
+   ```bash
+   flutter run
+   ```
+
+## ğŸš€ Development Commands
+
+### Running the Application
+
+**For Chrome Web Development** (recommended for testing):
+```bash
+cd /c/Projects/SimpleStepFlutter-Clean && flutter run -d chrome --debug --dart-define-from-file=.env
+```
+
+**For General Development**:
+```bash
+flutter run
+```
+
+**For Web Server** (accessible from other devices):
+```bash
+flutter run -d web-server --web-port 8080
+```
+
+### Hot Reload
+When the app is running, use:
+- `r` - Hot reload
+- `R` - Hot restart
+- `q` - Quit
+
+## ğŸ”§ Configuration Guideensive Flutter application for health data tracking with AI-powered analytics, built with Supabase backend and OpenAI integration.
 
 ![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
@@ -8,16 +38,16 @@ A comprehensive Flutter application for health data tracking with AI-powered ana
 ![OpenAI](https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=openai&logoColor=white)
 
 ## âœ¨ Features
+7
+- **ï¿½ï¿½ï¿½ Cross-Platform**: iOS, Android, Web, Windows, macOS, Linux/
+- **ï¿½ï¿½ï¿½ Secure Configuration**: Environment-based secrets management
+- **ï¿½ï¿½ï¿½ Health Tracking**: Step counting, health data synchronization
+- **ï¿½ï¿½ï¿½ AI Analytics**: OpenAI-powered health insights and recommendations
+- **ï¿½ï¿½ï¿½ï¸ Database Integration**: Supabase for user data and health records
+- **ï¿½ï¿½ï¿½ Modern UI**: Material Design with FluentUI icon support
+- **ï¿½ï¿½ï¿½ MCP Integration**: Model Context Protocol for advanced AI interactions
 
-- **í³± Cross-Platform**: iOS, Android, Web, Windows, macOS, Linux
-- **í´’ Secure Configuration**: Environment-based secrets management
-- **í³Š Health Tracking**: Step counting, health data synchronization
-- **í´– AI Analytics**: OpenAI-powered health insights and recommendations
-- **í·„ï¸ Database Integration**: Supabase for user data and health records
-- **í¾¨ Modern UI**: Material Design with FluentUI icon support
-- **í´Œ MCP Integration**: Model Context Protocol for advanced AI interactions
-
-## íº€ Quick Start
+## ï¿½ï¿½ï¿½ Quick Start
 
 ### Prerequisites
 
@@ -55,7 +85,7 @@ A comprehensive Flutter application for health data tracking with AI-powered ana
    flutter run
    ```
 
-## í³‹ Configuration Guide
+## ï¿½ï¿½ï¿½ Configuration Guide
 
 ### Supabase Setup
 
@@ -71,7 +101,7 @@ A comprehensive Flutter application for health data tracking with AI-powered ana
 
 For detailed setup instructions, see [SECURITY_SETUP.md](SECURITY_SETUP.md).
 
-## í´’ Security
+## ï¿½ï¿½ï¿½ Security
 
 This project uses environment variables to manage sensitive configuration:
 
@@ -82,14 +112,14 @@ This project uses environment variables to manage sensitive configuration:
 
 See [SECURITY_SETUP.md](SECURITY_SETUP.md) for detailed security guidelines.
 
-## í³– Documentation
+## ï¿½ï¿½ï¿½ Documentation
 
 - [Security Setup Guide](SECURITY_SETUP.md)
-- [MCP Testing Guide](Docs/MCP_TESTING_GUIDE.md)
+- [Goal Setting Agent Testing Guide](docs/MCP_TESTING_GUIDE.md)
 - [Health Connect Testing](Docs/HEALTH_CONNECT_TESTING_GUIDE.md)
 - [Project Overview](Docs/project_overview.md)
 
-## í´ Contributing
+## ï¿½ï¿½ï¿½ Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -97,11 +127,11 @@ See [SECURITY_SETUP.md](SECURITY_SETUP.md) for detailed security guidelines.
 4. Push to the branch
 5. Open a Pull Request
 
-## í³„ License
+## ï¿½ï¿½ï¿½ License
 
 This project is licensed under the MIT License.
 
-## í¹ Acknowledgments
+## ï¿½ï¿½ï¿½ Acknowledgments
 
 - [Flutter](https://flutter.dev/) - UI framework
 - [Supabase](https://supabase.com/) - Backend as a Service

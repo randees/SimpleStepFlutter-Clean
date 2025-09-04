@@ -1,0 +1,83 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Node.js Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/simple-server.js",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Flutter Web (Debug with Env)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--debug",
+        "--dart-define-from-file=.env",
+        "--web-hostname",
+        "localhost",
+        "--web-port",
+        "8080"
+      ]
+    },
+    {
+      "name": "Flutter Web (Simple Debug)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--debug",
+        "--dart-define=SUPABASE_URL=${env:SUPABASE_URL}",
+        "--dart-define=SUPABASE_ANON_KEY=${env:SUPABASE_ANON_KEY}",
+        "--dart-define=OPENAI_API_KEY=${env:OPENAI_API_KEY}",
+        "--web-hostname",
+        "localhost",
+        "--web-port",
+        "8080"
+      ]
+    },
+    {
+      "name": "Flutter Web (Clean Debug - Port 3001)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--debug",
+        "--dart-define-from-file=.env",
+        "--web-port=3001"
+      ],
+      "console": "debugConsole"
+    },
+    {
+      "name": "Flutter Web (Release - No Debug Noise)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--release",
+        "--dart-define-from-file=.env",
+        "--web-port=3001"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 Full Stack Debug (Node.js + Flutter)",
+      "configurations": [
+        "Node.js Server",
+        "Flutter Web (Debug with Env)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

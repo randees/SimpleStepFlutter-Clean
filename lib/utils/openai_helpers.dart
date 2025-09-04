@@ -45,6 +45,24 @@ class OpenAIHelpers {
     };
   }
 
+  /// Generate a date range from beginning of time to current date
+  static Map<String, String> getHistoricalRange() {
+    final now = DateTime.now();
+    final endDate = DateTime(now.year, now.month, now.day);
+    // Start from a reasonable historical date (when fitness tracking became common)
+    final startDate = DateTime(2020, 1, 1);
+
+    return {
+      'startDate': DateFormat('yyyy-MM-dd').format(startDate),
+      'endDate': DateFormat('yyyy-MM-dd').format(endDate),
+    };
+  }
+
+  /// Get current date in YYYY-MM-DD format
+  static String getCurrentDate() {
+    return DateFormat('yyyy-MM-dd').format(DateTime.now());
+  }
+
   /// Generate a date range for the current month
   static Map<String, String> getCurrentMonthRange() {
     final now = DateTime.now();

@@ -1,4 +1,4 @@
-# Quick MCP Test (Using Your Existing Step Data!)
+# Quick Goal Setting Agent Test (Using Your Existing Step Data!)
 
 ## ✅ Your MCP Server is Working with Real Data!
 
@@ -20,5 +20,5 @@ curl -X POST "https://YOUR-PROJECT-ID.supabase.co/functions/v1/mcp-server" \
 
 ## 📱 Next Steps
 1. Access Flutter app at http://localhost:3000
-2. Click the API icon (📡) to open MCP Test Widget
+2. Click the brain icon (🧠) to open Goal Setting Agent
 3. Test with OpenAI integration!

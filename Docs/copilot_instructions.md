@@ -1,21 +1,51 @@
-# Create a very simple app for android using flutter
+# Copilot Instructions for SimpleStepFlutter-Clean
 
-This app is a proof of concept that we can read the ammount of steps recorded on an android device from Health Connect.
+## Required Rules
 
-## Development Stack
+- **Documentation**: All documents created should go into the `/docs` folder
+- **Critical Thinking**: Be critical of questions I ask - if I'm not correct, give me better options
+- **Security**: NEVER put any API keys or secrets into code - those should always be imported by environment variables
+- **Execution**: Always check the console before running a command to see if a server is running.  Prompt me for any server resets.
 
-- Use Flutter with Dart built for android
+## Project-Specific Guidelines
 
-## Implemntations
+### Code Organization
+- Follow the established directory structure: `/lib`, `/tests`, `/docs`, `/supabase`
+- Use meaningful file and directory names (lowercase with underscores/hyphens)
+- Keep the root directory clean with only essential configuration files
 
-- This program should be a white screen display black numbers (step count).
-- Do not simulate any data.  If there is no step data from health connect display 0.
-- Do not add extra features.
-- You can handle errors gracefully.
+### Flutter Development
+- Use proper error handling and logging (currently using print statements for debugging)
+- Follow Flutter/Dart naming conventions (camelCase for variables, PascalCase for classes)
+- Implement proper state management patterns
 
-## Important Notes
+### Security Best Practices
+- Environment variables should be loaded via `EnvConfig` class
+- API calls should use the security services (`OpenAISecurity`, `RateLimiter`)
+- Never expose service role keys to client-side code
 
-1. Put all documentation into its own Folder "Docs".
-2. Add any import .ignore files (ex. .gitignore)
-3. Create the project in the same directory as this document.
-4. In the readme.md file add instructions to launch the program.
+### Testing
+- Place all tests in `/tests` directory
+- Integration tests go in `/tests/integration`
+- Test fixtures in `/tests/fixtures`
+
+### Documentation
+- Update relevant documentation when making significant changes
+- Keep deployment and setup guides current
+- Document API changes and new features
+
+## Current Tech Stack
+
+- **Frontend**: Flutter Web/Mobile
+- **Backend**: Supabase (database), Node.js (simple-server.js)
+- **AI Integration**: OpenAI GPT-3.5-turbo with ReAct pattern
+- **Security**: Rate limiting, input sanitization, environment variable management
+- **Deployment**: Render (web hosting)
+
+## Development Priorities
+
+1. Security and environment variable management
+2. Clean, maintainable code organization  
+3. Proper error handling and user feedback
+4. Comprehensive testing coverage
+5. Clear documentation and setup instructions

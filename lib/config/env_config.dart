@@ -15,11 +15,19 @@ class EnvConfig {
     if (_isInitialized) return;
 
     try {
-      // For web deployment, fetch configuration from server API
+      // For web deployment, try dart-define values first (from --dart-define-from-file)
       if (kIsWeb) {
-        print(
-          '🌐 Web platform detected, fetching configuration from server...',
-        );
+        print('🌐 Web platform detected, checking for dart-define values...');
+
+        // Check if we have dart-define values (from --dart-define-from-file)
+        if (_hasDartDefineValues()) {
+          print('✅ Using dart-define environment variables');
+          _isInitialized = true;
+          return;
+        }
+
+        // Fallback to server API for production
+        print('🌐 No dart-define values found, fetching from server...');
         await _loadWebConfig();
         _isInitialized = true;
         print('✅ Web configuration loaded successfully from server');
@@ -37,11 +45,97 @@ class EnvConfig {
     }
   }
 
+  /// Check if dart-define values are available (from --dart-define-from-file)
+  static bool _hasDartDefineValues() {
+    try {
+      print('🔍 Checking all dart-define environment variables...');
+
+      final supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
+      final supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY');
+      final supabaseServiceRoleKey = const String.fromEnvironment(
+        'SUPABASE_SERVICE_ROLE_KEY',
+      );
+      final openaiKey = const String.fromEnvironment('OPENAI_API_KEY');
+      final mcpEndpoint = const String.fromEnvironment('MCP_ENDPOINT');
+      final mcpSecret = const String.fromEnvironment('MCP_SECRET');
+      final flutterEnv = const String.fromEnvironment('FLUTTER_ENV');
+      final debugMode = const String.fromEnvironment('DEBUG_MODE');
+
+      print('🔍 dart-define environment variable check:');
+      print(
+        '  SUPABASE_URL: ${supabaseUrl.isNotEmpty ? "✅ Set (${supabaseUrl.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  SUPABASE_ANON_KEY: ${supabaseAnonKey.isNotEmpty ? "✅ Set (${supabaseAnonKey.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  SUPABASE_SERVICE_ROLE_KEY: ${supabaseServiceRoleKey.isNotEmpty ? "✅ Set (${supabaseServiceRoleKey.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  OPENAI_API_KEY: ${openaiKey.isNotEmpty ? "✅ Set (${openaiKey.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  MCP_ENDPOINT: ${mcpEndpoint.isNotEmpty ? "✅ Set (${mcpEndpoint.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  MCP_SECRET: ${mcpSecret.isNotEmpty ? "✅ Set (${mcpSecret.length} chars)" : "❌ Empty"}',
+      );
+      print(
+        '  FLUTTER_ENV: ${flutterEnv.isNotEmpty ? "✅ Set ($flutterEnv)" : "❌ Empty"}',
+      );
+      print(
+        '  DEBUG_MODE: ${debugMode.isNotEmpty ? "✅ Set ($debugMode)" : "❌ Empty"}',
+      );
+
+      if (supabaseUrl.isNotEmpty || openaiKey.isNotEmpty) {
+        print(
+          '✅ dart-define values detected - using direct environment loading',
+        );
+        return true;
+      }
+
+      print('❌ No dart-define values found');
+      return false;
+    } catch (e) {
+      print('⚠️ Error checking dart-define values: $e');
+      return false;
+    }
+  }
+
+  /// Get dart-define value for a specific key
+  static String _getDartDefineValue(String key) {
+    switch (key) {
+      case 'SUPABASE_URL':
+        return const String.fromEnvironment('SUPABASE_URL');
+      case 'SUPABASE_ANON_KEY':
+        return const String.fromEnvironment('SUPABASE_ANON_KEY');
+      case 'SUPABASE_SERVICE_ROLE_KEY':
+        return const String.fromEnvironment('SUPABASE_SERVICE_ROLE_KEY');
+      case 'OPENAI_API_KEY':
+        return const String.fromEnvironment('OPENAI_API_KEY');
+      case 'MCP_ENDPOINT':
+        return const String.fromEnvironment('MCP_ENDPOINT');
+      case 'MCP_SECRET':
+        return const String.fromEnvironment('MCP_SECRET');
+      case 'FLUTTER_ENV':
+        return const String.fromEnvironment('FLUTTER_ENV');
+      case 'DEBUG_MODE':
+        return const String.fromEnvironment('DEBUG_MODE');
+      default:
+        return const String.fromEnvironment('');
+    }
+  }
+
   /// Load configuration from server API (web platform only)
   static Future<void> _loadWebConfig() async {
     try {
-      print('🌐 Making request to /api/config...');
-      final response = await http.get(Uri.parse('/api/config'));
+      // Use localhost:3000 for debug mode, relative path for production
+      final configUrl = kDebugMode
+          ? 'http://localhost:3000/api/config'
+          : '/api/config';
+
+      print('🌐 Making request to $configUrl...');
+      final response = await http.get(Uri.parse(configUrl));
 
       print('🌐 Server response status: ${response.statusCode}');
       print('🌐 Server response body: ${response.body}');
@@ -81,10 +175,20 @@ class EnvConfig {
       );
     }
 
-    // For web, use server-provided configuration
+    // For web, try dart-define values first, then server config
     if (kIsWeb) {
+      // First try dart-define values (from --dart-define-from-file)
+      final dartDefineValue = _getDartDefineValue(key);
+      if (dartDefineValue.isNotEmpty) {
+        print(
+          '🔍 _getEnv($key) -> ${dartDefineValue.length > 20 ? "[MASKED ${dartDefineValue.length} chars]" : dartDefineValue} (from dart-define)',
+        );
+        return dartDefineValue;
+      }
+
+      // Fallback to server-provided configuration
       if (_webConfig == null) {
-        print('⚠️ Web config is null for key: $key');
+        print('🔍 _getEnv($key) -> [EMPTY]');
         return fallback ?? '';
       }
 
@@ -96,6 +200,9 @@ class EnvConfig {
           break;
         case 'SUPABASE_ANON_KEY':
           value = _webConfig!['supabaseAnonKey']?.toString();
+          break;
+        case 'SUPABASE_SERVICE_ROLE_KEY':
+          value = _webConfig!['supabaseServiceRoleKey']?.toString();
           break;
         case 'OPENAI_API_KEY':
           value = _webConfig!['openaiApiKey']?.toString();
@@ -145,6 +252,10 @@ class EnvConfig {
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
+  /// Check if Supabase service role key is configured
+  static bool get isSupabaseServiceRoleConfigured =>
+      supabaseServiceRoleKey.isNotEmpty;
+
   // OpenAI Configuration
   static String get openaiApiKey => _getEnv('OPENAI_API_KEY');
 
@@ -183,8 +294,12 @@ class EnvConfig {
       'environment': isDevelopment ? 'development' : 'production',
       'debug_mode': debugMode,
       'supabase_configured': isSupabaseConfigured,
+      'supabase_service_role_configured': isSupabaseServiceRoleConfigured,
       'supabase_url': supabaseUrl.isNotEmpty
           ? '${supabaseUrl.substring(0, 20)}...'
+          : 'Not set',
+      'supabase_service_role_key': supabaseServiceRoleKey.isNotEmpty
+          ? getMaskedApiKey(supabaseServiceRoleKey)
           : 'Not set',
       'openai_configured': isOpenAIConfigured,
       'openai_api_key': openaiApiKey.isNotEmpty

@@ -1,0 +1,200 @@
+{
+  "export_metadata": {
+    "export_format_version": "1.0.0",
+    "export_date": "2025-09-04T10:30:00.000Z",
+    "exported_by": "System",
+    "total_records": 5
+  },
+  "user_profile": {
+    "email": "john.doe@example.com",
+    "created_at": "2025-01-15T08:00:00.000Z",
+    "updated_at": "2025-09-04T10:30:00.000Z",
+    "timezone": "America/New_York",
+    "date_of_birth": "1985-06-15",
+    "gender": "male",
+    "height_cm": 175.5,
+    "weight_kg": 75.2,
+    "activity_level": "moderately_active",
+    "health_goals": ["weight_loss", "muscle_gain"],
+    "medical_conditions": ["none"],
+    "medications": ["none"],
+    "allergies": ["peanuts"]
+  },
+  "user_devices": [
+    {
+      "device_type": "android",
+      "device_model": "Pixel 7",
+      "os_version": "Android 14",
+      "app_version": "2.1.0",
+      "last_sync": "2025-09-04T10:25:00.000Z",
+      "is_active": true,
+      "created_at": "2025-01-15T08:00:00.000Z"
+    }
+  ],
+  "genetic_insights": [
+    {
+      "data": {
+        "gene_analysis": {
+          "APOE": {
+            "genotype": "E3/E4",
+            "risk_assessment": "moderate",
+            "confidence_score": 0.95,
+            "interpretation": "Moderate risk for Alzheimer's disease"
+          },
+          "MTHFR": {
+            "genotype": "C677T/C677T",
+            "methylation_efficiency": "reduced",
+            "nutrient_recommendations": ["folate", "B12", "B6"],
+            "confidence_score": 0.92
+          },
+          "COMT": {
+            "genotype": "Val/Val",
+            "catecholamine_metabolism": "fast",
+            "caffeine_sensitivity": "high",
+            "stress_response": "moderate",
+            "confidence_score": 0.88
+          }
+        },
+        "trait_predictions": {
+          "caffeine_metabolism": {
+            "rate": "fast",
+            "recommendation": "Can tolerate higher caffeine intake",
+            "confidence_score": 0.85
+          },
+          "alcohol_metabolism": {
+            "rate": "moderate",
+            "recommendation": "Standard alcohol consumption guidelines apply",
+            "confidence_score": 0.78
+          },
+          "vitamin_d_synthesis": {
+            "efficiency": "reduced",
+            "recommendation": "Consider vitamin D supplementation",
+            "confidence_score": 0.82
+          }
+        },
+        "health_risks": {
+          "cardiovascular": {
+            "risk_level": "low",
+            "contributing_factors": ["favorable_cholesterol_genetics"],
+            "preventive_measures": ["regular_exercise", "heart_healthy_diet"],
+            "confidence_score": 0.79
+          },
+          "diabetes_type_2": {
+            "risk_level": "moderate",
+            "contributing_factors": ["family_history", "lifestyle_factors"],
+            "preventive_measures": ["weight_management", "regular_screening"],
+            "confidence_score": 0.76
+          }
+        },
+        "nutrient_metabolism": {
+          "folate": {
+            "metabolism_rate": "reduced",
+            "supplementation_needed": true,
+            "food_sources": ["leafy_greens", "beans", "citrus_fruits"],
+            "confidence_score": 0.91
+          },
+          "vitamin_b12": {
+            "absorption_efficiency": "normal",
+            "supplementation_recommended": false,
+            "confidence_score": 0.84
+          }
+        },
+        "analysis_summary": {
+          "total_genes_analyzed": 47,
+          "significant_findings": 12,
+          "actionable_insights": 8,
+          "last_updated": "2025-09-04T10:30:00.000Z"
+        }
+      },
+      "meta_data": {
+        "source": "23andMe",
+        "analysis_date": "2025-09-04T10:30:00.000Z",
+        "lab_provider": "23andMe",
+        "chip_version": "v5",
+        "genome_build": "GRCh37",
+        "quality_metrics": {
+          "call_rate": 0.998,
+          "heterozygosity": 0.234,
+          "contamination_estimate": 0.001
+        },
+        "privacy_settings": {
+          "data_sharing": false,
+          "research_consent": true,
+          "ancestry_sharing": true
+        },
+        "report_version": "2.1",
+        "analysis_method": "imputation_based",
+        "confidence_threshold": 0.8
+      }
+    },
+    {
+      "data": {
+        "pharmacogenomics": {
+          "CYP2D6": {
+            "genotype": "*1/*4",
+            "metabolism_phenotype": "intermediate_metabolizer",
+            "drug_responses": {
+              "codeine": "reduced_effectiveness",
+              "tamoxifen": "standard_dosage",
+              "ondansetron": "standard_dosage"
+            },
+            "confidence_score": 0.94
+          },
+          "CYP2C19": {
+            "genotype": "*1/*2",
+            "metabolism_phenotype": "intermediate_metabolizer",
+            "drug_responses": {
+              "clopidogrel": "reduced_effectiveness",
+              "omeprazole": "standard_dosage",
+              "citalopram": "reduced_dosage_recommended"
+            },
+            "confidence_score": 0.91
+          }
+        },
+        "medication_guidance": {
+          "statin_response": {
+            "predicted_efficacy": "good",
+            "recommended_monitoring": "standard_lipid_panel",
+            "confidence_score": 0.83
+          },
+          "beta_blocker_response": {
+            "predicted_efficacy": "moderate",
+            "side_effect_risk": "low",
+            "confidence_score": 0.79
+          }
+        },
+        "analysis_summary": {
+          "total_variants_analyzed": 89,
+          "clinically_actionable": 15,
+          "pharmacogenomic_findings": 7,
+          "last_updated": "2025-09-04T10:30:00.000Z"
+        }
+      },
+      "meta_data": {
+        "source": "Color",
+        "analysis_date": "2025-09-04T10:30:00.000Z",
+        "lab_provider": "Color",
+        "test_type": "comprehensive_genetic_health_risk",
+        "clinvar_version": "202308",
+        "acmg_guidelines_version": "2020",
+        "quality_metrics": {
+          "coverage_depth": "30x",
+          "variant_call_quality": 0.997,
+          "false_positive_rate": 0.001
+        },
+        "certifications": ["CLIA", "CAP"],
+        "report_version": "3.2",
+        "analysis_method": "whole_exome_sequencing",
+        "confidence_threshold": 0.85
+      }
+    }
+  ],
+  "activity_data": [],
+  "vital_signs": [],
+  "sleep_data": [],
+  "nutrition_data": [],
+  "body_measurements": [],
+  "wellness_data": [],
+  "health_insights": [],
+  "recommendations": []
+}
