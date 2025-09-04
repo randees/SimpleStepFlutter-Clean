@@ -27,7 +27,9 @@ void main() async {
 
     if (usersResponse.isEmpty) {
       if (kDebugMode) {
-        print('⚠️ No users found in database. Let\'s import test data first...');
+        print(
+          '⚠️ No users found in database. Let\'s import test data first...',
+        );
       }
 
       // Read the test data file

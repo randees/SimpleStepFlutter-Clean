@@ -107,13 +107,12 @@ class _DatabaseTestPageState extends State<DatabaseTestPage> {
           body: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
+              return FadeTransition(opacity: animation, child: child);
             },
             child: Padding(
-              key: ValueKey(isWideScreen), // Key changes when layout mode changes
+              key: ValueKey(
+                isWideScreen,
+              ), // Key changes when layout mode changes
               padding: const EdgeInsets.all(16.0),
               child: isWideScreen ? _buildWideLayout() : _buildNarrowLayout(),
             ),

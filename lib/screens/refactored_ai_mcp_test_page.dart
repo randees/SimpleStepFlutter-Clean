@@ -14,15 +14,16 @@ import '../widgets/ai_components/question_input_widget.dart';
 import '../widgets/ai_components/conversation_history_widget.dart';
 import '../widgets/ai_components/custom_prompt_widget.dart';
 
-/// Comprehensive Health Data AI Assistant - AI-powered health analysis with OpenAI integration
-class AIMCPTestPage extends StatefulWidget {
-  const AIMCPTestPage({super.key});
+/// Refactored AI MCP Test Page using SOLID principles and composition
+class RefactoredAIMCPTestPage extends StatefulWidget {
+  const RefactoredAIMCPTestPage({super.key});
 
   @override
-  State<AIMCPTestPage> createState() => _AIMCPTestPageState();
+  State<RefactoredAIMCPTestPage> createState() =>
+      _RefactoredAIMCPTestPageState();
 }
 
-class _AIMCPTestPageState extends State<AIMCPTestPage> {
+class _RefactoredAIMCPTestPageState extends State<RefactoredAIMCPTestPage> {
   // Service dependencies (Dependency Injection)
   late final ConversationService _conversationService;
   late final OpenAIService _openAIService;
@@ -46,9 +47,6 @@ class _AIMCPTestPageState extends State<AIMCPTestPage> {
 
   // MCP service for health data access
   MCPClientService? _mcpService;
-
-  // Service initialization state
-  bool _servicesInitialized = false;
 
   // Debug logging throttle
   int? _lastDebugTime;
@@ -133,10 +131,6 @@ Always respond as if you're speaking directly to your client in a supportive con
       _openAIService = ServiceLocator().openAIService;
       _promptService = ServiceLocator().promptService;
       _userService = ServiceLocator().userService;
-
-      setState(() {
-        _servicesInitialized = true;
-      });
 
       if (kDebugMode) {
         print('✅ All services initialized successfully');
@@ -496,6 +490,7 @@ Always respond as if you're speaking directly to your client in a supportive con
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
+        final screenHeight = MediaQuery.of(context).size.height;
         final isWideScreen = screenWidth > 800;
 
         // Debug logging for web deployment (throttled to reduce spam)
@@ -503,7 +498,7 @@ Always respond as if you're speaking directly to your client in a supportive con
         if (_lastDebugTime == null || currentTime - _lastDebugTime! > 1000) {
           if (kDebugMode) {
             print(
-              '📱 LayoutBuilder dimensions: ${screenWidth.toInt()}x${constraints.maxHeight.toInt()}, isWideScreen: $isWideScreen',
+              '📱 LayoutBuilder dimensions: ${screenWidth.toInt()}x${screenHeight.toInt()}, isWideScreen: $isWideScreen',
             );
           }
           _lastDebugTime = currentTime;
@@ -517,126 +512,105 @@ Always respond as if you're speaking directly to your client in a supportive con
           child: isWideScreen
               ? Container(
                   key: const ValueKey('wide'),
-                  child: _buildWideLayout(constraints),
+                  child: _buildWideLayoutWithHeight(context),
                 )
-              : Container(
+              : SingleChildScrollView(
                   key: const ValueKey('narrow'),
-                  child: _buildNarrowLayout(constraints),
+                  padding: const EdgeInsets.all(16.0),
+                  child: _buildNarrowLayout(),
                 ),
         );
       },
     );
   }
 
-  Widget _buildWideLayout(BoxConstraints constraints) {
-    // Check if services are initialized
-    if (!_servicesInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    final availableHeight = constraints.maxHeight - kToolbarHeight - 32;
+  Widget _buildWideLayoutWithHeight(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final availableHeight = screenHeight - kToolbarHeight - 32;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: SizedBox(
-        height: availableHeight,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left column - Custom prompt
-            Expanded(
-              flex: 1,
-              child: CustomPromptWidget(
-                promptController: _customPromptController,
-                promptNameController: _promptNameController,
-                promptStatus: _promptStatus,
-                onResetPrompt: _resetCustomPrompt,
-                onSavePrompt: _saveCurrentPrompt,
-                onLoadPrompts: _loadSavedPrompts,
-                isLoadingPrompts: _isLoadingPrompts,
-                savedPrompts: _savedPrompts,
-                selectedPrompt: _selectedPrompt,
-                onPromptSelected: _loadSelectedPrompt,
-                onDeletePrompt: _deleteSavedPrompt,
-              ),
-            ),
-            const SizedBox(width: 24),
-            // Right column - User selection, conversation history and question input
-            Expanded(
-              flex: 1,
-              child: Column(
-                children: [
-                  UserSelectionWidget(
-                    selectedUser: _selectedUser,
-                    onUserChanged: _onUserChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ConversationHistoryWidget(
-                      messages: _conversationService.messages,
-                      scrollController: _conversationScrollController,
-                      onClearHistory: () =>
-                          setState(() => _conversationService.clearHistory()),
-                      isExpanded: _isHistoryExpanded,
-                      onExpandedChanged: (expanded) =>
-                          setState(() => _isHistoryExpanded = expanded),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  QuestionInputWidget(
-                    controller: _questionController,
-                    selectedUser: _selectedUser,
-                    isProcessing: _isAiProcessing,
-                    onSubmit: _onQuestionSubmit,
-                    onCancel: _onCancelAiRequest,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: SizedBox(height: availableHeight, child: _buildWideLayout()),
     );
   }
 
-  Widget _buildNarrowLayout(BoxConstraints constraints) {
-    // Check if services are initialized
-    if (!_servicesInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+  Widget _buildNarrowLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        UserSelectionWidget(
+          selectedUser: _selectedUser,
+          onUserChanged: _onUserChanged,
+        ),
+        const SizedBox(height: 16),
+        QuestionInputWidget(
+          controller: _questionController,
+          selectedUser: _selectedUser,
+          isProcessing: _isAiProcessing,
+          onSubmit: _onQuestionSubmit,
+          onCancel: _onCancelAiRequest,
+        ),
+        const SizedBox(height: 16),
+        ConversationHistoryWidget(
+          messages: _conversationService.messages,
+          scrollController: _conversationScrollController,
+          onClearHistory: () =>
+              setState(() => _conversationService.clearHistory()),
+          isExpanded: _isHistoryExpanded,
+          onExpandedChanged: (expanded) =>
+              setState(() => _isHistoryExpanded = expanded),
+        ),
+        const SizedBox(height: 16),
+        CustomPromptWidget(
+          promptController: _customPromptController,
+          promptNameController: _promptNameController,
+          promptStatus: _promptStatus,
+          onResetPrompt: _resetCustomPrompt,
+          onSavePrompt: _saveCurrentPrompt,
+          onLoadPrompts: _loadSavedPrompts,
+          isLoadingPrompts: _isLoadingPrompts,
+          savedPrompts: _savedPrompts,
+          selectedPrompt: _selectedPrompt,
+          onPromptSelected: _loadSelectedPrompt,
+          onDeletePrompt: _deleteSavedPrompt,
+        ),
+      ],
+    );
+  }
 
-    final availableHeight = constraints.maxHeight - kToolbarHeight - 32;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: availableHeight),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UserSelectionWidget(
-              selectedUser: _selectedUser,
-              onUserChanged: _onUserChanged,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200, // Fixed height for question input
-              child: QuestionInputWidget(
-                controller: _questionController,
+  Widget _buildWideLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left column - Custom prompt
+        Expanded(
+          flex: 1,
+          child: CustomPromptWidget(
+            promptController: _customPromptController,
+            promptNameController: _promptNameController,
+            promptStatus: _promptStatus,
+            onResetPrompt: _resetCustomPrompt,
+            onSavePrompt: _saveCurrentPrompt,
+            onLoadPrompts: _loadSavedPrompts,
+            isLoadingPrompts: _isLoadingPrompts,
+            savedPrompts: _savedPrompts,
+            selectedPrompt: _selectedPrompt,
+            onPromptSelected: _loadSelectedPrompt,
+            onDeletePrompt: _deleteSavedPrompt,
+          ),
+        ),
+        const SizedBox(width: 24),
+        // Right column - User selection, conversation history and question input
+        Expanded(
+          flex: 1,
+          child: Column(
+            children: [
+              UserSelectionWidget(
                 selectedUser: _selectedUser,
-                isProcessing: _isAiProcessing,
-                onSubmit: _onQuestionSubmit,
-                onCancel: _onCancelAiRequest,
+                onUserChanged: _onUserChanged,
               ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 300, // Fixed height for conversation history
-              child: ConversationHistoryWidget(
+              const SizedBox(height: 16),
+              ConversationHistoryWidget(
                 messages: _conversationService.messages,
                 scrollController: _conversationScrollController,
                 onClearHistory: () =>
@@ -644,30 +618,19 @@ Always respond as if you're speaking directly to your client in a supportive con
                 isExpanded: _isHistoryExpanded,
                 onExpandedChanged: (expanded) =>
                     setState(() => _isHistoryExpanded = expanded),
-                useConstrainedLayout: true,
               ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 400, // Fixed height for custom prompt
-              child: CustomPromptWidget(
-                promptController: _customPromptController,
-                promptNameController: _promptNameController,
-                promptStatus: _promptStatus,
-                onResetPrompt: _resetCustomPrompt,
-                onSavePrompt: _saveCurrentPrompt,
-                onLoadPrompts: _loadSavedPrompts,
-                isLoadingPrompts: _isLoadingPrompts,
-                savedPrompts: _savedPrompts,
-                selectedPrompt: _selectedPrompt,
-                onPromptSelected: _loadSelectedPrompt,
-                onDeletePrompt: _deleteSavedPrompt,
-                useConstrainedLayout: true,
+              const SizedBox(height: 16),
+              QuestionInputWidget(
+                controller: _questionController,
+                selectedUser: _selectedUser,
+                isProcessing: _isAiProcessing,
+                onSubmit: _onQuestionSubmit,
+                onCancel: _onCancelAiRequest,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

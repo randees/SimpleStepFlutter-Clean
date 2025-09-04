@@ -162,7 +162,9 @@ class SupabaseService {
           .map((userData) => UserModel.fromJson(userData))
           .toList();
       if (kDebugMode) {
-        print('✅ SupabaseService: Converted ${users.length} users successfully');
+        print(
+          '✅ SupabaseService: Converted ${users.length} users successfully',
+        );
       }
       return users;
     } catch (e) {
@@ -639,7 +641,9 @@ class SupabaseService {
         print('   - Vital Signs: ${cleanVitalSigns.length} records');
         print('   - Sleep Data: ${cleanSleepData.length} records');
         print('   - Nutrition Data: ${cleanNutritionData.length} records');
-        print('   - Body Measurements: ${cleanBodyMeasurements.length} records');
+        print(
+          '   - Body Measurements: ${cleanBodyMeasurements.length} records',
+        );
         print('   - Wellness Data: ${cleanWellnessData.length} records');
         print('   - Health Insights: ${cleanHealthInsights.length} records');
         print('   - Recommendations: ${cleanRecommendations.length} records');
@@ -726,7 +730,9 @@ class SupabaseService {
         }
       } else {
         if (kDebugMode) {
-          print('🔍 Debug: No user ID found in profile - this is a clean import');
+          print(
+            '🔍 Debug: No user ID found in profile - this is a clean import',
+          );
         }
         originalUserId = null;
       }
@@ -767,7 +773,9 @@ class SupabaseService {
                 final deviceId = deviceMap['id'].toString();
                 oldDeviceIds.add(deviceId);
                 if (kDebugMode) {
-                  print('🔍 Debug: Added device ID from user_devices: $deviceId');
+                  print(
+                    '🔍 Debug: Added device ID from user_devices: $deviceId',
+                  );
                 }
               } else {
                 if (kDebugMode) {
@@ -804,7 +812,9 @@ class SupabaseService {
         for (final tableName in tablesWithDeviceId) {
           if (importData.containsKey(tableName)) {
             if (kDebugMode) {
-              print('🔍 Debug: Checking $tableName for device_id references...');
+              print(
+                '🔍 Debug: Checking $tableName for device_id references...',
+              );
             }
             final tableData = importData[tableName] as List<dynamic>;
             if (kDebugMode) {
@@ -893,8 +903,12 @@ class SupabaseService {
         final userDevices = importData['user_devices'] as List<dynamic>;
         if (userDevices.isNotEmpty) {
           if (kDebugMode) {
-            print('🔄 STEP 2: Importing user_devices first to get device IDs...');
-            print('🔄 Importing user_devices: ${userDevices.length} devices...');
+            print(
+              '🔄 STEP 2: Importing user_devices first to get device IDs...',
+            );
+            print(
+              '🔄 Importing user_devices: ${userDevices.length} devices...',
+            );
           }
 
           final deviceInsertData = <Map<String, dynamic>>[];
