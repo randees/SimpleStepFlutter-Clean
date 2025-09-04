@@ -47,7 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final isWideScreen = screenWidth > 800; // Consistent breakpoint with AI page
+        final isWideScreen =
+            screenWidth > 800; // Consistent breakpoint with AI page
 
         return Scaffold(
           appBar: AppBar(

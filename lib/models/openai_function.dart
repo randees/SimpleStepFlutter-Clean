@@ -227,7 +227,8 @@ class HealthDataFunctions {
           'limit': {
             'type': 'number',
             'default': 10,
-            'description': 'Maximum number of genetic insights to return (default: 10)',
+            'description':
+                'Maximum number of genetic insights to return (default: 10)',
           },
         },
         'required': ['userId'],

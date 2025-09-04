@@ -41,7 +41,9 @@ class GeneticInsightsService {
   static Future<GeneticInsight?> getGeneticInsight(String insightId) async {
     try {
       if (kDebugMode) {
-        print('🔄 GeneticInsightsService: Fetching genetic insight: $insightId');
+        print(
+          '🔄 GeneticInsightsService: Fetching genetic insight: $insightId',
+        );
       }
 
       final response = await SupabaseService.client
@@ -118,7 +120,9 @@ class GeneticInsightsService {
   }) async {
     try {
       if (kDebugMode) {
-        print('🔄 GeneticInsightsService: Updating genetic insight: $insightId');
+        print(
+          '🔄 GeneticInsightsService: Updating genetic insight: $insightId',
+        );
       }
 
       final updateData = <String, dynamic>{};
@@ -161,7 +165,9 @@ class GeneticInsightsService {
   static Future<bool> deleteGeneticInsight(String insightId) async {
     try {
       if (kDebugMode) {
-        print('🔄 GeneticInsightsService: Deleting genetic insight: $insightId');
+        print(
+          '🔄 GeneticInsightsService: Deleting genetic insight: $insightId',
+        );
       }
 
       await SupabaseService.client
