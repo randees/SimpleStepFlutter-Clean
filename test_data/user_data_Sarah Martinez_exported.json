@@ -1,9 +1,11 @@
 {
   "export_metadata": {
     "export_format_version": "1.0.0",
-    "export_date": "2025-09-04T09:24:40.999",
+    "export_date": "2025-09-04T12:21:41.034",
     "exported_by": "System",
-    "total_records": 30
+    "total_records": 31,
+    "device_count": 3,
+    "genetic_insights_count": 1
   },
   "user_profile": {
     "email": "sarah.college.athlete@university.edu",
@@ -552,96 +554,6 @@
       }
     }
   ],
-  "genetic_insights":
-  {
-  "Change Strongly Recommended": {
-    "Omega Fatty Acids": {
-      "Omega-3 Need": { "value": "Much Increased", "color": "red" }
-    },
-    "Bone Density": {
-      "General Bone Density": { "value": "Low", "color": "red" },
-      "Lumbar Bone Density": { "value": "Low", "color": "red" }
-    }
-  },
-  "Consider Change": {
-    "B Vitamins": {
-      "Vitamin B1 Level Propensity": { "value": "Reduced", "color": "yellow" },
-      "Biotin (B7) Deficiency Propensity": { "value": "Increased", "color": "yellow" },
-      "Folic Acid Supplementation Tolerance": { "value": "Low", "color": "yellow" }
-    },
-    "Bone Density": {
-      "Wrist Fracture Propensity": { "value": "Increased", "color": "yellow" },
-      "Excess Calcium Propensity": { "value": "Increased", "color": "yellow" }
-    },
-    "Oxidative Stress": {
-      "Oxidative Stress Support": { "value": "Decreased", "color": "yellow" }
-    },
-    "Methylation": {
-      "Methylation Propensity": { "value": "Undermethylation Potential", "color": "yellow" }
-    },
-    "Obesity Risk": {
-      "Obesity Risk": { "value": "Increased", "color": "yellow" }
-    },
-    "Mitochondria": {
-      "Mitochondrial Function": { "value": "Low", "color": "yellow" }
-    }
-  },
-  "No Immediate Change Needed": {
-    "Sleep": {
-      "Sleep Deprivation Sensitivity": { "value": "Neutral", "color": "green" }
-    },
-    "Insulin Resistance": {
-      "Insulin Resistance Propensity": { "value": "Neutral", "color": "green" }
-    },
-    "Methylation": {
-      "MTHFR Activity": { "value": "83% enzyme activity", "color": "green" }
-    },
-    "Bone Density": {
-      "Hip Bone Density and Fracture Risk": { "value": "Neutral", "color": "green" }
-    },
-    "Omega Fatty Acids": {
-      "Omega-6 Risk": { "value": "Neutral", "color": "green" }
-    },
-    "B Vitamins": {
-      "Vitamin B6 Need": { "value": "Neutral", "color": "green" },
-      "Vitamin B12 Level Propensity": { "value": "Increased", "color": "green" }
-    },
-    "Cardiovascular Genetics": {
-      "CAD Propensity": { "value": "Neutral", "color": "green" },
-      "APo Status": { "value": "APo ε3/ε3 status", "color": "green" },
-      "Atrial Fibrillation": { "value": "Neutral", "color": "green" },
-      "LPAI Risk": { "value": "Neutral", "color": "green" }
-    },
-    "Fatigue and Recovery": {
-      "Muscle Recovery Speed": { "value": "Neutral", "color": "green" },
-      "Muscle Endurance": { "value": "Neutral", "color": "green" }
-    },
-    "Skin": {
-      "Rate of Skin Aging": { "value": "Neutral", "color": "green" }
-    },
-    "Obesity Risk": {
-      "Weight Regain Propensity": { "value": "Neutral", "color": "green" }
-    },
-    "Longevity": {
-      "Longevity Propensity": { "value": "Neutral", "color": "green" },
-      "Telomere Length Propensity": { "value": "Neutral", "color": "green" }
-    },
-    "Stress Response": {
-      "Stress Adaptation": { "value": "Improved", "color": "green" },
-      "Stress Phenotype (COMT)": { "value": "Mediator", "color": "green" }
-    },
-    "Cortisol": {
-      "Cortisol Level Propensity": { "value": "Neutral", "color": "green" }
-    },
-    "Strength and Muscle": {
-      "Muscle Mass": { "value": "Increased", "color": "green" },
-      "Strength": { "value": "Increased", "color": "green" }
-    },
-    "Methylation": {
-      "Choline Need": { "value": "Neutral", "color": "green" }
-    }
-  }
-},
   "recommendations": [
     {
       "recommendation_type": "exercise",
@@ -678,6 +590,210 @@
         "algorithm": "competition_preparation",
         "training_phase": "peak",
         "competition_type": "endurance_race"
+      }
+    }
+  ],
+  "genetic_insights": [
+    {
+      "data": {
+        "Consider Change": {
+          "B Vitamins": {
+            "Vitamin B1 Level Propensity": {
+              "color": "yellow",
+              "value": "Reduced"
+            },
+            "Biotin (B7) Deficiency Propensity": {
+              "color": "yellow",
+              "value": "Increased"
+            },
+            "Folic Acid Supplementation Tolerance": {
+              "color": "yellow",
+              "value": "Low"
+            }
+          },
+          "Methylation": {
+            "Methylation Propensity": {
+              "color": "yellow",
+              "value": "Undermethylation Potential"
+            }
+          },
+          "Bone Density": {
+            "Excess Calcium Propensity": {
+              "color": "yellow",
+              "value": "Increased"
+            },
+            "Wrist Fracture Propensity": {
+              "color": "yellow",
+              "value": "Increased"
+            }
+          },
+          "Mitochondria": {
+            "Mitochondrial Function": {
+              "color": "yellow",
+              "value": "Low"
+            }
+          },
+          "Obesity Risk": {
+            "Obesity Risk": {
+              "color": "yellow",
+              "value": "Increased"
+            }
+          },
+          "Oxidative Stress": {
+            "Oxidative Stress Support": {
+              "color": "yellow",
+              "value": "Decreased"
+            }
+          }
+        },
+        "No Immediate Change Needed": {
+          "Skin": {
+            "Rate of Skin Aging": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Sleep": {
+            "Sleep Deprivation Sensitivity": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Cortisol": {
+            "Cortisol Level Propensity": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Longevity": {
+            "Longevity Propensity": {
+              "color": "green",
+              "value": "Neutral"
+            },
+            "Telomere Length Propensity": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "B Vitamins": {
+            "Vitamin B6 Need": {
+              "color": "green",
+              "value": "Neutral"
+            },
+            "Vitamin B12 Level Propensity": {
+              "color": "green",
+              "value": "Increased"
+            }
+          },
+          "Methylation": {
+            "Choline Need": {
+              "color": "green",
+              "value": "Neutral"
+            },
+            "MTHFR Activity": {
+              "color": "green",
+              "value": "83% enzyme activity"
+            }
+          },
+          "Bone Density": {
+            "Hip Bone Density and Fracture Risk": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Obesity Risk": {
+            "Weight Regain Propensity": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Stress Response": {
+            "Stress Adaptation": {
+              "color": "green",
+              "value": "Improved"
+            },
+            "Stress Phenotype (COMT)": {
+              "color": "green",
+              "value": "Mediator"
+            }
+          },
+          "Omega Fatty Acids": {
+            "Omega-6 Risk": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Insulin Resistance": {
+            "Insulin Resistance Propensity": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Strength and Muscle": {
+            "Strength": {
+              "color": "green",
+              "value": "Increased"
+            },
+            "Muscle Mass": {
+              "color": "green",
+              "value": "Increased"
+            }
+          },
+          "Fatigue and Recovery": {
+            "Muscle Endurance": {
+              "color": "green",
+              "value": "Neutral"
+            },
+            "Muscle Recovery Speed": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          },
+          "Cardiovascular Genetics": {
+            "LPAI Risk": {
+              "color": "green",
+              "value": "Neutral"
+            },
+            "APo Status": {
+              "color": "green",
+              "value": "APo ε3/ε3 status"
+            },
+            "CAD Propensity": {
+              "color": "green",
+              "value": "Neutral"
+            },
+            "Atrial Fibrillation": {
+              "color": "green",
+              "value": "Neutral"
+            }
+          }
+        },
+        "Change Strongly Recommended": {
+          "Bone Density": {
+            "Lumbar Bone Density": {
+              "color": "red",
+              "value": "Low"
+            },
+            "General Bone Density": {
+              "color": "red",
+              "value": "Low"
+            }
+          },
+          "Omega Fatty Acids": {
+            "Omega-3 Need": {
+              "color": "red",
+              "value": "Much Increased"
+            }
+          }
+        }
+      },
+      "meta_data": {
+        "source": "23andMe",
+        "analysis_date": "2025-09-04T10:30:00.000Z",
+        "quality_metrics": {
+          "call_rate": 0.998,
+          "heterozygosity": 0.234
+        }
       }
     }
   ]
