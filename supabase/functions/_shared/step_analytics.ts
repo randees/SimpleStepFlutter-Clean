@@ -19,18 +19,31 @@ export async function getStepSummary(
 ): Promise<StepSummary> {
   const supabase = createClient(supabaseUrl, supabaseKey)
   
+  console.log(`🔍 Step Analytics Debug:`)
+  console.log(`   User ID: ${userId}`)
+  console.log(`   Date Range: ${startDate} to ${endDate}`)
+  
   // Query step data from existing activity_data table
+  // Include all activity types that have steps data, not just 'steps' type
   const { data: stepData, error } = await supabase
     .from('activity_data')
-    .select('start_time, steps')
+    .select('start_time, steps, activity_type')
     .eq('user_id', userId)
-    .eq('activity_type', 'steps')
+    .not('steps', 'is', null)  // Only get records that have steps data
     .gte('start_time', startDate)
     .lte('start_time', endDate + 'T23:59:59')
     .order('start_time', { ascending: true })
 
   if (error) {
+    console.error(`❌ Step Analytics Error: ${error.message}`)
     throw new Error(`Failed to fetch step data: ${error.message}`)
+  }
+
+  console.log(`📊 Query Results:`)
+  console.log(`   Records found: ${stepData?.length || 0}`)
+  if (stepData && stepData.length > 0) {
+    console.log(`   Sample record:`, stepData[0])
+    console.log(`   Date range in data: ${stepData[0].start_time} to ${stepData[stepData.length - 1].start_time}`)
   }
 
   // Calculate analytics
