@@ -336,19 +336,18 @@ class _DatabaseTestPageState extends State<DatabaseTestPage> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey.shade50,
-            ),
-            child: SingleChildScrollView(
-              child: Text(
-                _debugOutput,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-              ),
+        Container(
+          height: 200, // Fixed height to prevent unbounded constraints
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.shade50,
+          ),
+          child: SingleChildScrollView(
+            child: Text(
+              _debugOutput,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
             ),
           ),
         ),

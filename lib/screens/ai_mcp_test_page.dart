@@ -601,6 +601,17 @@ Always respond as if you're speaking directly to your client in a supportive con
 
   /// Call OpenAI API with ReAct pattern and MCP function calling
   Future<String> _callOpenAI(String userMessage, String systemPrompt) async {
+    print('🔍 _callOpenAI called with userMessage: "$userMessage"');
+    print(
+      '📝 Current conversation history length: ${_conversationHistory.length}',
+    );
+    for (int i = 0; i < _conversationHistory.length; i++) {
+      final msg = _conversationHistory[i];
+      final preview = msg.message.length > 30
+          ? msg.message.substring(0, 30) + '...'
+          : msg.message;
+      print('   History ${i + 1}: ${msg.isUser ? 'User' : 'AI'}: $preview');
+    }
     final apiKey = OpenAIConfig.apiKey;
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -630,79 +641,151 @@ Always respond as if you're speaking directly to your client in a supportive con
     // Initial conversation with system prompt and user message
     List<Map<String, dynamic>> messages = [
       {'role': 'system', 'content': systemPrompt},
-      {'role': 'user', 'content': userMessage},
     ];
 
-    try {
-      // Start ReAct conversation loop (max 5 iterations to prevent infinite loops)
-      for (int iteration = 0; iteration < 5; iteration++) {
-        print('🔄 ReAct iteration ${iteration + 1}');
+    // Add conversation history as context (exclude the most recent user message to avoid duplication)
+    List<ChatMessage> historyToInclude = [];
+    if (_conversationHistory.isNotEmpty) {
+      // If the last message is from the user (current question), exclude it from history
+      // since we'll add it separately as the current message
+      if (_conversationHistory.last.isUser) {
+        historyToInclude = _conversationHistory.length > 1
+            ? _conversationHistory.sublist(0, _conversationHistory.length - 1)
+            : [];
+      } else {
+        historyToInclude = _conversationHistory;
+      }
 
-        final body = json.encode({
-          'model': 'gpt-3.5-turbo',
-          'messages': messages,
-          'tools': tools,
-          'tool_choice': 'auto',
-          'max_tokens': 500,
-          'temperature': 0.7,
-        });
-
-        final response = await http.post(
-          Uri.parse(apiUrl),
-          headers: headers,
-          body: body,
+      // Limit to last 10 messages to avoid token limits
+      if (historyToInclude.length > 10) {
+        historyToInclude = historyToInclude.sublist(
+          historyToInclude.length - 10,
         );
+      }
+    }
 
-        if (response.statusCode != 200) {
-          print('OpenAI API Error: ${response.statusCode} - ${response.body}');
-          return 'Error: Unable to get AI response. Status: ${response.statusCode}';
-        }
+    if (historyToInclude.isNotEmpty) {
+      print(
+        '📚 Including ${historyToInclude.length} previous messages in AI context',
+      );
+      for (int i = 0; i < historyToInclude.length; i++) {
+        final chatMessage = historyToInclude[i];
+        final preview = chatMessage.message.length > 50
+            ? chatMessage.message.substring(0, 50) + '...'
+            : chatMessage.message;
+        print('   ${i + 1}. ${chatMessage.isUser ? 'User' : 'AI'}: $preview');
+      }
+    }
 
-        final data = json.decode(response.body);
-        final choice = data['choices'][0];
-        final message = choice['message'];
+    for (final chatMessage in historyToInclude) {
+      messages.add({
+        'role': chatMessage.isUser ? 'user' : 'assistant',
+        'content': chatMessage.message,
+      });
+    }
 
-        // Add AI response to conversation
-        messages.add(message);
+    // Add the current user message
+    messages.add({'role': 'user', 'content': userMessage});
 
-        // Check if AI wants to call a tool
-        if (message['tool_calls'] != null && message['tool_calls'].isNotEmpty) {
-          final toolCalls = message['tool_calls'] as List;
+    print('📤 Final messages being sent to OpenAI:');
+    for (int i = 0; i < messages.length; i++) {
+      final msg = messages[i];
+      final content = msg['content'] as String;
+      final preview = content.length > 50
+          ? content.substring(0, 50) + '...'
+          : content;
+      print('   ${i + 1}. ${msg['role']}: $preview');
+    }
 
-          // Process each tool call
-          for (final toolCall in toolCalls) {
-            final toolCallId = toolCall['id'];
-            final function = toolCall['function'];
-            final functionName = function['name'];
-            final functionArgs = json.decode(function['arguments']);
+    try {
+      // For simple conversation memory, make a single API call with full context
+      print('🔄 Making single API call with conversation context');
 
-            print(
-              '🔧 AI is calling function: $functionName with args: $functionArgs',
-            );
+      final body = json.encode({
+        'model': 'gpt-3.5-turbo',
+        'messages': messages,
+        'tools': tools,
+        'tool_choice': 'auto',
+        'max_tokens': 500,
+        'temperature': 0.7,
+      });
 
-            // Call the appropriate MCP function
-            String functionResult = await _executeMCPFunction(
-              functionName,
-              functionArgs,
-            );
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: headers,
+        body: body,
+      );
 
-            // Add function result to conversation
-            messages.add({
-              'role': 'tool',
-              'tool_call_id': toolCallId,
-              'content': functionResult,
-            });
+      if (response.statusCode != 200) {
+        print('OpenAI API Error: ${response.statusCode} - ${response.body}');
+        return 'Error: Unable to get AI response. Status: ${response.statusCode}';
+      }
 
-            print(
-              '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
-            );
+      final data = json.decode(response.body);
+      final choice = data['choices'][0];
+      final message = choice['message'];
+
+      // Check if AI wants to call a tool
+      if (message['tool_calls'] != null && message['tool_calls'].isNotEmpty) {
+        final toolCalls = message['tool_calls'] as List;
+
+        // Process each tool call
+        for (final toolCall in toolCalls) {
+          final toolCallId = toolCall['id'];
+          final function = toolCall['function'];
+          final functionName = function['name'];
+          final functionArgs = json.decode(function['arguments']);
+
+          print(
+            '🔧 AI is calling function: $functionName with args: $functionArgs',
+          );
+
+          // Call the appropriate MCP function
+          String functionResult = await _executeMCPFunction(
+            functionName,
+            functionArgs,
+          );
+
+          // Make a follow-up call with the tool result
+          messages.add(message); // Add AI's tool call message
+          messages.add({
+            'role': 'tool',
+            'tool_call_id': toolCallId,
+            'content': functionResult,
+          });
+
+          print(
+            '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
+          );
+
+          // Make follow-up call to get final response
+          final followUpBody = json.encode({
+            'model': 'gpt-3.5-turbo',
+            'messages': messages,
+            'max_tokens': 500,
+            'temperature': 0.7,
+          });
+
+          final followUpResponse = await http.post(
+            Uri.parse(apiUrl),
+            headers: headers,
+            body: followUpBody,
+          );
+
+          if (followUpResponse.statusCode == 200) {
+            final followUpData = json.decode(followUpResponse.body);
+            final followUpChoice = followUpData['choices'][0];
+            final finalResponse =
+                followUpChoice['message']['content'] ?? 'No response';
+            print('✅ AI provided final response after tool call');
+            return finalResponse;
           }
-        } else {
-          // AI provided final response without tool call
-          final finalResponse = message['content'] ?? 'No response';
-          print('✅ AI provided final response');
-          return finalResponse;
         }
+      } else {
+        // AI provided final response without tool call
+        final finalResponse = message['content'] ?? 'No response';
+        print('✅ AI provided final response');
+        return finalResponse;
       }
 
       return 'I gathered some health data but ran into processing limits. Please try asking a more specific question.';
@@ -900,6 +983,8 @@ Always respond as if you're speaking directly to your client in a supportive con
               onChanged: (UserModel? newValue) {
                 setState(() {
                   _selectedUser = newValue;
+                  // Clear conversation history when switching users
+                  _conversationHistory.clear();
                   // Initialize MCP service for the selected user
                   if (newValue != null) {
                     _mcpService = MCPClientService(userId: newValue.id);
@@ -908,9 +993,25 @@ Always respond as if you're speaking directly to your client in a supportive con
                         print(
                           '✅ MCP service initialized for user: ${newValue.friendlyName}',
                         );
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Switched to user: ${newValue.friendlyName}',
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
                       } else {
                         print(
                           '❌ Failed to initialize MCP service for user: ${newValue.friendlyName}',
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to initialize user context'),
+                            backgroundColor: Colors.red,
+                          ),
                         );
                       }
                     });
@@ -1297,13 +1398,46 @@ Always respond as if you're speaking directly to your client in a supportive con
                   'Conversation History:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
+                if (_conversationHistory.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${_conversationHistory.length} msg${_conversationHistory.length == 1 ? '' : 's'} in context',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 const Spacer(),
                 if (_conversationHistory.isNotEmpty)
                   TextButton.icon(
                     onPressed: () {
                       setState(() {
                         _conversationHistory.clear();
+                        print(
+                          '🧹 Conversation history cleared - AI context reset',
+                        );
                       });
+                      // Show confirmation message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Conversation history cleared - AI context reset',
+                          ),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.delete, size: 16),
                     label: const Text('Clear'),

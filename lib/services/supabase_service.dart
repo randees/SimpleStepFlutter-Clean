@@ -856,7 +856,7 @@ class SupabaseService {
                 final oldDeviceId = recordMap['device_id'];
                 recordMap['device_id'] = actualDeviceIdMapping[oldDeviceId]!;
                 print(
-                  '� Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
+                  '✅ Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
                 );
               }
 
