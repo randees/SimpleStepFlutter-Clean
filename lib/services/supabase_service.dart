@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import '../config/supabase_config.dart';
 import '../models/user_model.dart';
 
@@ -28,15 +29,19 @@ class SupabaseService {
 
   /// Initialize Supabase client
   static Future<void> initialize() async {
-    print('SupabaseService: Starting initialization...');
-    print('SupabaseService: Using URL: ${SupabaseConfig.supabaseUrl}');
+    if (kDebugMode) {
+      print('SupabaseService: Starting initialization...');
+      print('SupabaseService: Using URL: ${SupabaseConfig.supabaseUrl}');
+    }
 
     // Debug configuration
     final configSummary = SupabaseConfig.getConfigSummary();
-    print('🔍 Supabase Config Summary:');
-    configSummary.forEach((key, value) {
-      print('  $key: $value');
-    });
+    if (kDebugMode) {
+      print('🔍 Supabase Config Summary:');
+      configSummary.forEach((key, value) {
+        print('  $key: $value');
+      });
+    }
 
     try {
       // Always create fresh clients to avoid singleton caching issues
@@ -49,9 +54,11 @@ class SupabaseService {
 
       // Admin client with service role key for admin operations (bypasses RLS)
       final serviceRoleKey = SupabaseConfig.supabaseServiceRoleKey;
-      print(
-        '🔐 Service role key for admin client: ${serviceRoleKey.isNotEmpty ? "✅ ${serviceRoleKey.length} chars" : "❌ Empty"}',
-      );
+      if (kDebugMode) {
+        print(
+          '🔐 Service role key for admin client: ${serviceRoleKey.isNotEmpty ? "✅ ${serviceRoleKey.length} chars" : "❌ Empty"}',
+        );
+      }
 
       if (serviceRoleKey.isEmpty) {
         throw Exception(
@@ -61,12 +68,16 @@ class SupabaseService {
 
       _adminClient = SupabaseClient(SupabaseConfig.supabaseUrl, serviceRoleKey);
 
-      print('🔐 Admin client initialized successfully with service role key');
-      print(
-        'SupabaseService: Direct client initialization completed successfully',
-      );
+      if (kDebugMode) {
+        print('🔐 Admin client initialized successfully with service role key');
+        print(
+          'SupabaseService: Direct client initialization completed successfully',
+        );
+      }
     } catch (e) {
-      print('SupabaseService: Direct client initialization error: $e');
+      if (kDebugMode) {
+        print('SupabaseService: Direct client initialization error: $e');
+      }
 
       // Fallback to singleton if direct client fails
       try {
@@ -82,9 +93,11 @@ class SupabaseService {
           SupabaseConfig.supabaseServiceRoleKey,
         );
 
-        print(
-          'SupabaseService: Fallback initialization completed successfully',
-        );
+        if (kDebugMode) {
+          print(
+            'SupabaseService: Fallback initialization completed successfully',
+          );
+        }
       } catch (e2) {
         if (e2.toString().contains('This instance is already initialized')) {
           _client = Supabase.instance.client;
@@ -95,7 +108,9 @@ class SupabaseService {
             SupabaseConfig.supabaseServiceRoleKey,
           );
 
-          print('SupabaseService: Using existing Supabase instance');
+          if (kDebugMode) {
+            print('SupabaseService: Using existing Supabase instance');
+          }
         } else {
           rethrow;
         }
@@ -105,7 +120,9 @@ class SupabaseService {
 
   /// Force re-initialization (for configuration changes)
   static Future<void> forceReinitialize() async {
-    print('SupabaseService: Force re-initializing...');
+    if (kDebugMode) {
+      print('SupabaseService: Force re-initializing...');
+    }
     _client = null;
     _adminClient = null;
     await initialize();
@@ -129,21 +146,29 @@ class SupabaseService {
   /// Fetch all users from the database
   static Future<List<UserModel>> fetchUsers() async {
     try {
-      print('🔄 SupabaseService: Fetching users from database...');
-      print(
-        '🔄 SupabaseService: Using Supabase URL: ${SupabaseConfig.supabaseUrl}',
-      );
+      if (kDebugMode) {
+        print('🔄 SupabaseService: Fetching users from database...');
+        print(
+          '🔄 SupabaseService: Using Supabase URL: ${SupabaseConfig.supabaseUrl}',
+        );
+      }
 
       final response = await client.from('users').select('*');
 
-      print('📊 SupabaseService: Database response: $response');
+      if (kDebugMode) {
+        print('📊 SupabaseService: Database response: $response');
+      }
       final users = response
           .map((userData) => UserModel.fromJson(userData))
           .toList();
-      print('✅ SupabaseService: Converted ${users.length} users successfully');
+      if (kDebugMode) {
+        print('✅ SupabaseService: Converted ${users.length} users successfully');
+      }
       return users;
     } catch (e) {
-      print('❌ SupabaseService: Error fetching users: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error fetching users: $e');
+      }
       return [];
     }
   }
@@ -179,7 +204,9 @@ class SupabaseService {
       // If no data found, return 0 (no mock/fallback data)
       return 0; // No fallback data
     } catch (e) {
-      print('Error fetching user step count: $e');
+      if (kDebugMode) {
+        print('Error fetching user step count: $e');
+      }
       return 0; // No fallback data
     }
   }
@@ -207,7 +234,9 @@ class SupabaseService {
 
       return response != null;
     } catch (e) {
-      print('Error checking if activity data exists: $e');
+      if (kDebugMode) {
+        print('Error checking if activity data exists: $e');
+      }
       return false;
     }
   }
@@ -222,9 +251,11 @@ class SupabaseService {
     try {
       // Check if data already exists
       if (await activityDataExists(userId, date, 'steps')) {
-        print(
-          'Activity data for ${DateFormat('yyyy-MM-dd').format(date)} already exists, skipping...',
-        );
+        if (kDebugMode) {
+          print(
+            'Activity data for ${DateFormat('yyyy-MM-dd').format(date)} already exists, skipping...',
+          );
+        }
         return true; // Return true since data exists (not an error)
       }
 
@@ -240,12 +271,16 @@ class SupabaseService {
         'steps': stepCount,
       });
 
-      print(
-        'Successfully inserted activity data for ${DateFormat('yyyy-MM-dd').format(date)}: $stepCount steps',
-      );
+      if (kDebugMode) {
+        print(
+          'Successfully inserted activity data for ${DateFormat('yyyy-MM-dd').format(date)}: $stepCount steps',
+        );
+      }
       return true;
     } catch (e) {
-      print('Error inserting activity data: $e');
+      if (kDebugMode) {
+        print('Error inserting activity data: $e');
+      }
       return false;
     }
   }
@@ -307,7 +342,9 @@ class SupabaseService {
           .map<StepDataEntry>((item) => StepDataEntry.fromActivityData(item))
           .toList();
     } catch (e) {
-      print('Error getting activity data range: $e');
+      if (kDebugMode) {
+        print('Error getting activity data range: $e');
+      }
       return [];
     }
   }
@@ -327,7 +364,9 @@ class SupabaseService {
 
       return entries.fold<int>(0, (total, entry) => total + entry.stepCount);
     } catch (e) {
-      print('Error getting total steps in range: $e');
+      if (kDebugMode) {
+        print('Error getting total steps in range: $e');
+      }
       return 0;
     }
   }
@@ -342,12 +381,16 @@ class SupabaseService {
           .delete()
           .lt('start_time', cutoffDate.toIso8601String());
 
-      print(
-        'Successfully cleaned up activity data older than $daysToKeep days',
-      );
+      if (kDebugMode) {
+        print(
+          'Successfully cleaned up activity data older than $daysToKeep days',
+        );
+      }
       return true;
     } catch (e) {
-      print('Error cleaning up old activity data: $e');
+      if (kDebugMode) {
+        print('Error cleaning up old activity data: $e');
+      }
       return false;
     }
   }
@@ -360,7 +403,9 @@ class SupabaseService {
 
       return true;
     } catch (e) {
-      print('Database connection test failed: $e');
+      if (kDebugMode) {
+        print('Database connection test failed: $e');
+      }
       return false;
     }
   }
@@ -368,7 +413,9 @@ class SupabaseService {
   /// Export all user data including profile and activity data
   static Future<Map<String, dynamic>> exportUserData(String userId) async {
     try {
-      print('🔄 Exporting comprehensive data for user: $userId');
+      if (kDebugMode) {
+        print('🔄 Exporting comprehensive data for user: $userId');
+      }
 
       // Get user profile using admin client to bypass RLS
       final userResponse = await adminClient
@@ -584,25 +631,31 @@ class SupabaseService {
       };
 
       // Log export summary
-      print('✅ Export Summary for user $userId:');
-      print('   - User Profile: 1 record');
-      print('   - User Devices: ${cleanUserDevices.length} records');
-      print('   - Activity Data: ${cleanActivityData.length} records');
-      print('   - Vital Signs: ${cleanVitalSigns.length} records');
-      print('   - Sleep Data: ${cleanSleepData.length} records');
-      print('   - Nutrition Data: ${cleanNutritionData.length} records');
-      print('   - Body Measurements: ${cleanBodyMeasurements.length} records');
-      print('   - Wellness Data: ${cleanWellnessData.length} records');
-      print('   - Health Insights: ${cleanHealthInsights.length} records');
-      print('   - Recommendations: ${cleanRecommendations.length} records');
-      print('   - Genetic Insights: ${cleanGeneticInsights.length} records');
-      print('   - Total Records: $totalRecords');
-      print('   - Export Format: 1.0.0 (compatible with import)');
+      if (kDebugMode) {
+        print('✅ Export Summary for user $userId:');
+        print('   - User Profile: 1 record');
+        print('   - User Devices: ${cleanUserDevices.length} records');
+        print('   - Activity Data: ${cleanActivityData.length} records');
+        print('   - Vital Signs: ${cleanVitalSigns.length} records');
+        print('   - Sleep Data: ${cleanSleepData.length} records');
+        print('   - Nutrition Data: ${cleanNutritionData.length} records');
+        print('   - Body Measurements: ${cleanBodyMeasurements.length} records');
+        print('   - Wellness Data: ${cleanWellnessData.length} records');
+        print('   - Health Insights: ${cleanHealthInsights.length} records');
+        print('   - Recommendations: ${cleanRecommendations.length} records');
+        print('   - Genetic Insights: ${cleanGeneticInsights.length} records');
+        print('   - Total Records: $totalRecords');
+        print('   - Export Format: 1.0.0 (compatible with import)');
+      }
 
-      print('✅ Successfully exported comprehensive data for user: $userId');
+      if (kDebugMode) {
+        print('✅ Successfully exported comprehensive data for user: $userId');
+      }
       return exportData;
     } catch (e) {
-      print('❌ Error exporting user data: $e');
+      if (kDebugMode) {
+        print('❌ Error exporting user data: $e');
+      }
       rethrow;
     }
   }
@@ -610,8 +663,10 @@ class SupabaseService {
   /// Import user data from exported JSON
   static Future<bool> importUserData(Map<String, dynamic> importData) async {
     try {
-      print('🔄 Starting comprehensive user data import...');
-      print('🔐 Using admin client to bypass RLS policies');
+      if (kDebugMode) {
+        print('🔄 Starting comprehensive user data import...');
+        print('🔐 Using admin client to bypass RLS policies');
+      }
 
       // Validate import data structure
       if (!importData.containsKey('user_profile')) {
@@ -624,28 +679,38 @@ class SupabaseService {
         final formatVersion = metadata['export_format_version'] ?? 'unknown';
         final exportedBy = metadata['exported_by'] ?? 'unknown';
         final exportDate = metadata['export_date'] ?? 'unknown';
-        print('📋 Import Source Info:');
-        print('   - Format Version: $formatVersion');
-        print('   - Exported By: $exportedBy');
-        print('   - Export Date: $exportDate');
+        if (kDebugMode) {
+          print('📋 Import Source Info:');
+          print('   - Format Version: $formatVersion');
+          print('   - Exported By: $exportedBy');
+          print('   - Export Date: $exportDate');
+        }
       } else {
-        print(
-          '⚠️  No export metadata found - this may be test data or an older export format',
-        );
+        if (kDebugMode) {
+          print(
+            '⚠️  No export metadata found - this may be test data or an older export format',
+          );
+        }
       }
 
-      print('🔍 Debug: Checking user_profile structure...');
+      if (kDebugMode) {
+        print('🔍 Debug: Checking user_profile structure...');
+      }
       final userProfile = importData['user_profile'] as Map<String, dynamic>;
-      print('🔍 Debug: user_profile keys: ${userProfile.keys.toList()}');
-      print(
-        '🔍 Debug: user_profile contains id: ${userProfile.containsKey('id')}',
-      );
+      if (kDebugMode) {
+        print('🔍 Debug: user_profile keys: ${userProfile.keys.toList()}');
+        print(
+          '🔍 Debug: user_profile contains id: ${userProfile.containsKey('id')}',
+        );
+      }
 
       // Handle case where user profile doesn't have an ID (clean import)
       String? originalUserId;
       if (userProfile.containsKey('id') && userProfile['id'] != null) {
         originalUserId = userProfile['id'] as String;
-        print('🔍 Debug: Found existing user ID: $originalUserId');
+        if (kDebugMode) {
+          print('🔍 Debug: Found existing user ID: $originalUserId');
+        }
 
         // Check if user already exists (using admin client)
         final existingUser = await adminClient
@@ -660,11 +725,15 @@ class SupabaseService {
           );
         }
       } else {
-        print('🔍 Debug: No user ID found in profile - this is a clean import');
+        if (kDebugMode) {
+          print('🔍 Debug: No user ID found in profile - this is a clean import');
+        }
         originalUserId = null;
       }
 
-      print('🔄 Generating UUID mappings for device IDs...');
+      if (kDebugMode) {
+        print('🔄 Generating UUID mappings for device IDs...');
+      }
 
       // Generate UUID mappings for device IDs
       final Map<String, String> deviceIdMapping = {};
@@ -675,31 +744,47 @@ class SupabaseService {
       try {
         // Check user_devices table for device IDs
         if (importData.containsKey('user_devices')) {
-          print('🔍 Debug: Processing user_devices for device IDs...');
+          if (kDebugMode) {
+            print('🔍 Debug: Processing user_devices for device IDs...');
+          }
           final userDevices = importData['user_devices'] as List<dynamic>;
-          print('🔍 Debug: Found ${userDevices.length} user devices');
+          if (kDebugMode) {
+            print('🔍 Debug: Found ${userDevices.length} user devices');
+          }
 
           for (int i = 0; i < userDevices.length; i++) {
             try {
               final device = userDevices[i];
-              print('🔍 Debug: Processing device $i: ${device.runtimeType}');
+              if (kDebugMode) {
+                print('🔍 Debug: Processing device $i: ${device.runtimeType}');
+              }
               final deviceMap = device as Map<String, dynamic>;
-              print('🔍 Debug: Device $i keys: ${deviceMap.keys.toList()}');
+              if (kDebugMode) {
+                print('🔍 Debug: Device $i keys: ${deviceMap.keys.toList()}');
+              }
 
               if (deviceMap.containsKey('id') && deviceMap['id'] != null) {
                 final deviceId = deviceMap['id'].toString();
                 oldDeviceIds.add(deviceId);
-                print('🔍 Debug: Added device ID from user_devices: $deviceId');
+                if (kDebugMode) {
+                  print('🔍 Debug: Added device ID from user_devices: $deviceId');
+                }
               } else {
-                print('🔍 Debug: Device $i has no id field or id is null');
+                if (kDebugMode) {
+                  print('🔍 Debug: Device $i has no id field or id is null');
+                }
               }
             } catch (e) {
-              print('❌ Debug: Error processing device $i: $e');
+              if (kDebugMode) {
+                print('❌ Debug: Error processing device $i: $e');
+              }
               rethrow;
             }
           }
         } else {
-          print('🔍 Debug: No user_devices found in import data');
+          if (kDebugMode) {
+            print('🔍 Debug: No user_devices found in import data');
+          }
         }
 
         // Check all other tables for device_id references
@@ -718,9 +803,13 @@ class SupabaseService {
 
         for (final tableName in tablesWithDeviceId) {
           if (importData.containsKey(tableName)) {
-            print('🔍 Debug: Checking $tableName for device_id references...');
+            if (kDebugMode) {
+              print('🔍 Debug: Checking $tableName for device_id references...');
+            }
             final tableData = importData[tableName] as List<dynamic>;
-            print('🔍 Debug: $tableName has ${tableData.length} records');
+            if (kDebugMode) {
+              print('🔍 Debug: $tableName has ${tableData.length} records');
+            }
 
             for (int i = 0; i < tableData.length; i++) {
               try {
@@ -731,21 +820,29 @@ class SupabaseService {
                     recordMap['device_id'] != null) {
                   final deviceId = recordMap['device_id'].toString();
                   oldDeviceIds.add(deviceId);
-                  print(
-                    '🔍 Debug: Added device_id from $tableName[$i]: $deviceId',
-                  );
+                  if (kDebugMode) {
+                    print(
+                      '🔍 Debug: Added device_id from $tableName[$i]: $deviceId',
+                    );
+                  }
                 }
               } catch (e) {
-                print('❌ Debug: Error processing $tableName record $i: $e');
+                if (kDebugMode) {
+                  print('❌ Debug: Error processing $tableName record $i: $e');
+                }
                 rethrow;
               }
             }
           } else {
-            print('🔍 Debug: Table $tableName not found in import data');
+            if (kDebugMode) {
+              print('🔍 Debug: Table $tableName not found in import data');
+            }
           }
         }
       } catch (e) {
-        print('❌ Debug: Error during device ID collection: $e');
+        if (kDebugMode) {
+          print('❌ Debug: Error during device ID collection: $e');
+        }
         rethrow;
       }
 
@@ -754,10 +851,14 @@ class SupabaseService {
         // Generate a UUID v4
         final newUuid = _generateUuid();
         deviceIdMapping[oldId] = newUuid;
-        print('🔄 Mapping device ID: $oldId → $newUuid');
+        if (kDebugMode) {
+          print('🔄 Mapping device ID: $oldId → $newUuid');
+        }
       }
 
-      print('🔄 Importing user profile...');
+      if (kDebugMode) {
+        print('🔄 Importing user profile...');
+      }
 
       // Generate a new UUID for the user and update the profile
       final newUserId = _generateUuid();
@@ -765,16 +866,22 @@ class SupabaseService {
       updatedUserProfile['id'] = newUserId;
 
       if (originalUserId != null) {
-        print('🔄 Generated new user ID: $originalUserId → $newUserId');
+        if (kDebugMode) {
+          print('🔄 Generated new user ID: $originalUserId → $newUserId');
+        }
       } else {
-        print('🔄 Generated new user ID: $newUserId (clean import)');
+        if (kDebugMode) {
+          print('🔄 Generated new user ID: $newUserId (clean import)');
+        }
       }
 
       // Insert user profile with new UUID (using admin client to bypass RLS)
       await adminClient.from('users').insert(updatedUserProfile);
-      print(
-        '✅ Imported user profile for: ${updatedUserProfile['email']} with ID: $newUserId',
-      );
+      if (kDebugMode) {
+        print(
+          '✅ Imported user profile for: ${updatedUserProfile['email']} with ID: $newUserId',
+        );
+      }
 
       // Use the new user ID for all subsequent operations
       final actualUserId = newUserId;
@@ -785,8 +892,10 @@ class SupabaseService {
       if (importData.containsKey('user_devices')) {
         final userDevices = importData['user_devices'] as List<dynamic>;
         if (userDevices.isNotEmpty) {
-          print('🔄 STEP 2: Importing user_devices first to get device IDs...');
-          print('🔄 Importing user_devices: ${userDevices.length} devices...');
+          if (kDebugMode) {
+            print('🔄 STEP 2: Importing user_devices first to get device IDs...');
+            print('🔄 Importing user_devices: ${userDevices.length} devices...');
+          }
 
           final deviceInsertData = <Map<String, dynamic>>[];
 
@@ -810,22 +919,32 @@ class SupabaseService {
             // Track the device ID mapping for health data
             if (oldDeviceId != null) {
               actualDeviceIdMapping[oldDeviceId] = newDeviceId;
-              print('🔗 Device mapping: $oldDeviceId → $newDeviceId');
+              if (kDebugMode) {
+                print('🔗 Device mapping: $oldDeviceId → $newDeviceId');
+              }
             }
 
-            print('🔗 Set user_id for device: $actualUserId');
+            if (kDebugMode) {
+              print('🔗 Set user_id for device: $actualUserId');
+            }
           }
 
           // Insert all devices
           await adminClient.from('user_devices').insert(deviceInsertData);
-          print(
-            '✅ Imported ${deviceInsertData.length} devices to user_devices',
-          );
+          if (kDebugMode) {
+            print(
+              '✅ Imported ${deviceInsertData.length} devices to user_devices',
+            );
+          }
         } else {
-          print('ℹ️  No devices found in import data');
+          if (kDebugMode) {
+            print('ℹ️  No devices found in import data');
+          }
         }
       } else {
-        print('ℹ️  No user_devices found in import data');
+        if (kDebugMode) {
+          print('ℹ️  No user_devices found in import data');
+        }
       }
 
       // STEP 3: Import all health data tables (now with device mappings available)
@@ -845,15 +964,19 @@ class SupabaseService {
 
       int totalRecordsImported = 0; // Will count all imported records
 
-      print(
-        '🔄 STEP 3: Importing health data with proper user_id and device_id relationships...',
-      );
+      if (kDebugMode) {
+        print(
+          '🔄 STEP 3: Importing health data with proper user_id and device_id relationships...',
+        );
+      }
 
       for (final tableName in healthDataTables) {
         if (importData.containsKey(tableName)) {
           final tableData = importData[tableName] as List<dynamic>;
           if (tableData.isNotEmpty) {
-            print('🔄 Importing $tableName: ${tableData.length} records...');
+            if (kDebugMode) {
+              print('🔄 Importing $tableName: ${tableData.length} records...');
+            }
 
             // Clean up IDs and apply device/user mappings for health data
             final mappedTableData = <Map<String, dynamic>>[];
@@ -864,9 +987,11 @@ class SupabaseService {
 
               // Remove the id field to let database auto-generate UUIDs
               if (recordMap.containsKey('id')) {
-                print(
-                  '🔄 Removing ID field from $tableName record: ${recordMap['id']} (will be auto-generated)',
-                );
+                if (kDebugMode) {
+                  print(
+                    '🔄 Removing ID field from $tableName record: ${recordMap['id']} (will be auto-generated)',
+                  );
+                }
                 recordMap.remove('id');
               }
 
@@ -876,9 +1001,11 @@ class SupabaseService {
                   actualDeviceIdMapping.containsKey(recordMap['device_id'])) {
                 final oldDeviceId = recordMap['device_id'];
                 recordMap['device_id'] = actualDeviceIdMapping[oldDeviceId]!;
-                print(
-                  '✅ Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
-                );
+                if (kDebugMode) {
+                  print(
+                    '✅ Mapped device_id in $tableName: $oldDeviceId → ${recordMap['device_id']}',
+                  );
+                }
               }
 
               // Set user_id for the new user (always required for health data records)
@@ -887,11 +1014,15 @@ class SupabaseService {
                   tableName != 'data_sync_log') {
                 // All health data tables need user_id foreign key
                 recordMap['user_id'] = actualUserId;
-                print('🔗 Set user_id for $tableName record: $actualUserId');
+                if (kDebugMode) {
+                  print('🔗 Set user_id for $tableName record: $actualUserId');
+                }
               } else if (tableName == 'user_devices') {
                 // user_devices table also needs user_id foreign key
                 recordMap['user_id'] = actualUserId;
-                print('🔗 Set user_id for device: $actualUserId');
+                if (kDebugMode) {
+                  print('🔗 Set user_id for device: $actualUserId');
+                }
               }
 
               mappedTableData.add(recordMap);
@@ -910,33 +1041,39 @@ class SupabaseService {
             print('✅ Imported $imported records to $tableName');
             totalRecordsImported += imported;
           } else {
-            print('ℹ️  No data found for $tableName');
+            if (kDebugMode) {
+              print('ℹ️  No data found for $tableName');
+            }
           }
         } else {
-          print(
-            'ℹ️  Table $tableName not found in import data (this is normal for older exports)',
-          );
+          if (kDebugMode) {
+            print(
+              'ℹ️  Table $tableName not found in import data (this is normal for older exports)',
+            );
+          }
         }
       }
 
       // Log import summary
-      print('✅ Import Summary:');
-      if (originalUserId != null) {
-        print('   - Original User ID: $originalUserId');
-      } else {
-        print('   - Original User ID: none (clean import)');
-      }
-      print('   - New User ID: $actualUserId');
-      print('   - Email: ${updatedUserProfile['email']}');
-      print('   - Total Records Imported: $totalRecordsImported');
-      print('   - Health Data Tables Processed: ${healthDataTables.length}');
-      print('   - Device IDs Mapped: ${deviceIdMapping.length}');
+      if (kDebugMode) {
+        print('✅ Import Summary:');
+        if (originalUserId != null) {
+          print('   - Original User ID: $originalUserId');
+        } else {
+          print('   - Original User ID: none (clean import)');
+        }
+        print('   - New User ID: $actualUserId');
+        print('   - Email: ${updatedUserProfile['email']}');
+        print('   - Total Records Imported: $totalRecordsImported');
+        print('   - Health Data Tables Processed: ${healthDataTables.length}');
+        print('   - Device IDs Mapped: ${deviceIdMapping.length}');
 
-      if (deviceIdMapping.isNotEmpty) {
-        print('   - Device ID Mappings:');
-        deviceIdMapping.forEach((oldId, newId) {
-          print('     * $oldId → $newId');
-        });
+        if (deviceIdMapping.isNotEmpty) {
+          print('   - Device ID Mappings:');
+          deviceIdMapping.forEach((oldId, newId) {
+            print('     * $oldId → $newId');
+          });
+        }
       }
 
       // Check export format version for compatibility info
@@ -946,16 +1083,22 @@ class SupabaseService {
         final exportDate = metadata['export_date'] ?? 'unknown';
         final deviceCount = metadata['device_count'] ?? 'unknown';
         final totalRecords = metadata['total_records'] ?? 'unknown';
-        print('   - Export Format Version: $formatVersion');
-        print('   - Export Date: $exportDate');
-        print('   - Original Device Count: $deviceCount');
-        print('   - Original Total Records: $totalRecords');
+        if (kDebugMode) {
+          print('   - Export Format Version: $formatVersion');
+          print('   - Export Date: $exportDate');
+          print('   - Original Device Count: $deviceCount');
+          print('   - Original Total Records: $totalRecords');
+        }
       }
 
-      print('✅ Successfully imported all user data');
+      if (kDebugMode) {
+        print('✅ Successfully imported all user data');
+      }
       return true;
     } catch (e) {
-      print('❌ Error importing user data: $e');
+      if (kDebugMode) {
+        print('❌ Error importing user data: $e');
+      }
       rethrow;
     }
   }
@@ -963,8 +1106,10 @@ class SupabaseService {
   /// Delete user and all associated health data
   static Future<bool> deleteUserAndData(String userId) async {
     try {
-      print('🔄 SupabaseService: Deleting user and all data for: $userId');
-      print('🔄 SupabaseService: Using admin client with service role key');
+      if (kDebugMode) {
+        print('🔄 SupabaseService: Deleting user and all data for: $userId');
+        print('🔄 SupabaseService: Using admin client with service role key');
+      }
 
       // Delete from all health data tables in proper order (foreign keys)
       final tablesToDelete = [
@@ -997,7 +1142,9 @@ class SupabaseService {
           }
 
           final result = await query;
-          print('✅ SupabaseService: Deleted from $table - Result: $result');
+          if (kDebugMode) {
+            print('✅ SupabaseService: Deleted from $table - Result: $result');
+          }
 
           // For users table, let's check if it actually deleted anything
           if (table == 'users') {
@@ -1006,27 +1153,37 @@ class SupabaseService {
                 .select('id')
                 .eq('id', userId)
                 .maybeSingle();
-            print(
-              '🔍 SupabaseService: After users delete, user exists check: ${stillExists != null ? "STILL EXISTS" : "DELETED"}',
-            );
+            if (kDebugMode) {
+              print(
+                '🔍 SupabaseService: After users delete, user exists check: ${stillExists != null ? "STILL EXISTS" : "DELETED"}',
+              );
+            }
           }
         } catch (e) {
-          print('❌ SupabaseService: Error deleting from $table: $e');
+          if (kDebugMode) {
+            print('❌ SupabaseService: Error deleting from $table: $e');
+          }
           hasErrors = true;
           // For the users table, this is critical - don't continue if it fails
           if (table == 'users') {
-            print('❌ SupabaseService: Critical error deleting user record');
+            if (kDebugMode) {
+              print('❌ SupabaseService: Critical error deleting user record');
+            }
             return false;
           }
         }
       }
 
       if (hasErrors) {
-        print('⚠️ SupabaseService: Completed with some errors');
+        if (kDebugMode) {
+          print('⚠️ SupabaseService: Completed with some errors');
+        }
         return false;
       }
 
-      print('✅ SupabaseService: Successfully deleted user and all data');
+      if (kDebugMode) {
+        print('✅ SupabaseService: Successfully deleted user and all data');
+      }
 
       // Verify deletion by checking if user still exists
       final verifyResult = await adminClient
@@ -1036,19 +1193,25 @@ class SupabaseService {
           .maybeSingle();
 
       if (verifyResult != null) {
-        print(
-          '❌ SupabaseService: Verification failed - user still exists in database',
-        );
+        if (kDebugMode) {
+          print(
+            '❌ SupabaseService: Verification failed - user still exists in database',
+          );
+        }
         return false;
       } else {
-        print(
-          '✅ SupabaseService: Verification successful - user deleted from database',
-        );
+        if (kDebugMode) {
+          print(
+            '✅ SupabaseService: Verification successful - user deleted from database',
+          );
+        }
       }
 
       return true;
     } catch (e) {
-      print('❌ SupabaseService: Error deleting user data: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error deleting user data: $e');
+      }
       return false;
     }
   }
@@ -1142,7 +1305,9 @@ class SupabaseService {
         },
       };
     } catch (e) {
-      print('❌ SupabaseService: Error getting health summary: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error getting health summary: $e');
+      }
       return {'error': 'Failed to get health summary: $e'};
     }
   }
@@ -1169,7 +1334,9 @@ class SupabaseService {
       final response = await query.order('measured_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('❌ SupabaseService: Error getting vital signs: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error getting vital signs: $e');
+      }
       return [];
     }
   }
@@ -1233,7 +1400,9 @@ class SupabaseService {
         },
       };
     } catch (e) {
-      print('❌ SupabaseService: Error getting sleep analysis: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error getting sleep analysis: $e');
+      }
       return {'error': 'Failed to get sleep analysis: $e'};
     }
   }
@@ -1301,7 +1470,9 @@ class SupabaseService {
         },
       };
     } catch (e) {
-      print('❌ SupabaseService: Error getting nutrition analysis: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error getting nutrition analysis: $e');
+      }
       return {'error': 'Failed to get nutrition analysis: $e'};
     }
   }
@@ -1362,7 +1533,9 @@ class SupabaseService {
         },
       };
     } catch (e) {
-      print('❌ SupabaseService: Error getting wellness metrics: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error getting wellness metrics: $e');
+      }
       return {'error': 'Failed to get wellness metrics: $e'};
     }
   }
@@ -1370,7 +1543,9 @@ class SupabaseService {
   /// Test if we can actually delete from users table (for debugging RLS issues)
   static Future<void> testDeletePermissions(String userId) async {
     try {
-      print('🔍 Testing delete permissions for user: $userId');
+      if (kDebugMode) {
+        print('🔍 Testing delete permissions for user: $userId');
+      }
 
       // First, check if user exists
       final userExists = await client
@@ -1379,9 +1554,11 @@ class SupabaseService {
           .eq('id', userId)
           .maybeSingle();
 
-      print(
-        '🔍 User exists check: ${userExists != null ? "YES - ${userExists}" : "NO"}',
-      );
+      if (kDebugMode) {
+        print(
+          '🔍 User exists check: ${userExists != null ? "YES - ${userExists}" : "NO"}',
+        );
+      }
 
       if (userExists != null) {
         // Try a direct delete and see what happens
@@ -1391,7 +1568,9 @@ class SupabaseService {
               .delete()
               .eq('id', userId);
 
-          print('🔍 Direct delete result: $deleteResult');
+          if (kDebugMode) {
+            print('🔍 Direct delete result: $deleteResult');
+          }
 
           // Check if still exists after delete
           final stillExists = await client
@@ -1400,15 +1579,21 @@ class SupabaseService {
               .eq('id', userId)
               .maybeSingle();
 
-          print(
-            '🔍 After delete, still exists: ${stillExists != null ? "YES" : "NO"}',
-          );
+          if (kDebugMode) {
+            print(
+              '🔍 After delete, still exists: ${stillExists != null ? "YES" : "NO"}',
+            );
+          }
         } catch (e) {
-          print('🔍 Delete failed with error: $e');
+          if (kDebugMode) {
+            print('🔍 Delete failed with error: $e');
+          }
         }
       }
     } catch (e) {
-      print('❌ Test delete permissions error: $e');
+      if (kDebugMode) {
+        print('❌ Test delete permissions error: $e');
+      }
     }
   }
 
@@ -1434,7 +1619,9 @@ class SupabaseService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('❌ SupabaseService: Error getting health insights: $e');
+      if (kDebugMode) {
+        print('❌ SupabaseService: Error getting health insights: $e');
+      }
       return [];
     }
   }

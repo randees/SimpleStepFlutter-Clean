@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 import '../services/supabase_service.dart';
 import '../services/mcp_client_service.dart';
 import '../services/custom_prompts_service.dart';
@@ -52,6 +53,9 @@ class _AIMCPTestPageState extends State<AIMCPTestPage> {
 
   // MCP service for health data access
   MCPClientService? _mcpService;
+
+  // Debug logging throttle
+  int? _lastDebugTime;
 
   // Default system prompt
   static const String _defaultSystemPrompt =
@@ -148,20 +152,28 @@ Always respond as if you're speaking directly to your client in a supportive con
           _mcpService = MCPClientService(userId: _selectedUser!.id);
           _mcpService!.initialize().then((success) {
             if (success) {
-              print(
-                '✅ MCP service initialized for default user: ${_selectedUser!.friendlyName}',
-              );
+              if (kDebugMode) {
+                print(
+                  '✅ MCP service initialized for default user: ${_selectedUser!.friendlyName}',
+                );
+              }
             } else {
-              print(
-                '❌ Failed to initialize MCP service for default user: ${_selectedUser!.friendlyName}',
-              );
+              if (kDebugMode) {
+                print(
+                  '❌ Failed to initialize MCP service for default user: ${_selectedUser!.friendlyName}',
+                );
+              }
             }
           });
         }
       });
-      print('✅ Loaded ${users.length} users for AI testing');
+      if (kDebugMode) {
+        print('✅ Loaded ${users.length} users for AI testing');
+      }
     } catch (e) {
-      print('❌ Network error loading users: $e');
+      if (kDebugMode) {
+        print('❌ Network error loading users: $e');
+      }
 
       // Fallback: Create mock users for testing when network is unavailable
       final mockUsers = [
@@ -209,17 +221,23 @@ Always respond as if you're speaking directly to your client in a supportive con
         _mcpService = MCPClientService(userId: _selectedUser!.id);
         _mcpService!.initialize().then((success) {
           if (success) {
-            print(
-              '✅ MCP service initialized for mock user: ${_selectedUser!.friendlyName}',
-            );
+            if (kDebugMode) {
+              print(
+                '✅ MCP service initialized for mock user: ${_selectedUser!.friendlyName}',
+              );
+            }
           } else {
-            print(
-              '❌ Failed to initialize MCP service for mock user: ${_selectedUser!.friendlyName}',
-            );
+            if (kDebugMode) {
+              print(
+                '❌ Failed to initialize MCP service for mock user: ${_selectedUser!.friendlyName}',
+              );
+            }
           }
         });
       });
-      print('⚠️ Using mock users for AI testing (network unavailable)');
+      if (kDebugMode) {
+        print('⚠️ Using mock users for AI testing (network unavailable)');
+      }
     }
   }
 
@@ -251,9 +269,13 @@ Always respond as if you're speaking directly to your client in a supportive con
         _savedPrompts = prompts;
         _promptStatus = 'Loaded ${prompts.length} saved prompts';
       });
-      print('✅ Loaded ${prompts.length} saved prompts');
+      if (kDebugMode) {
+        print('✅ Loaded ${prompts.length} saved prompts');
+      }
     } catch (e) {
-      print('❌ Error loading saved prompts: $e');
+      if (kDebugMode) {
+        print('❌ Error loading saved prompts: $e');
+      }
       setState(() {
         _promptStatus = 'Error loading prompts: $e';
       });
@@ -301,14 +323,18 @@ Always respond as if you're speaking directly to your client in a supportive con
         setState(() {
           _promptStatus = 'Prompt saved successfully!';
         });
-        print('✅ Saved custom prompt: ${savedPrompt.promptName}');
+        if (kDebugMode) {
+          print('✅ Saved custom prompt: ${savedPrompt.promptName}');
+        }
       } else {
         setState(() {
           _promptStatus = 'Failed to save prompt';
         });
       }
     } catch (e) {
-      print('❌ Error saving prompt: $e');
+      if (kDebugMode) {
+        print('❌ Error saving prompt: $e');
+      }
       setState(() {
         _promptStatus = 'Error saving prompt: $e';
       });
@@ -326,7 +352,9 @@ Always respond as if you're speaking directly to your client in a supportive con
       _customPromptController.text = prompt.promptText;
       _promptStatus = 'Loaded prompt: ${prompt.promptName}';
     });
-    print('✅ Loaded prompt: ${prompt.promptName}');
+    if (kDebugMode) {
+      print('✅ Loaded prompt: ${prompt.promptName}');
+    }
   }
 
   /// Delete a saved prompt
@@ -371,14 +399,18 @@ Always respond as if you're speaking directly to your client in a supportive con
         setState(() {
           _promptStatus = 'Prompt deleted successfully';
         });
-        print('✅ Deleted prompt: ${prompt.promptName}');
+        if (kDebugMode) {
+          print('✅ Deleted prompt: ${prompt.promptName}');
+        }
       } else {
         setState(() {
           _promptStatus = 'Failed to delete prompt';
         });
       }
     } catch (e) {
-      print('❌ Error deleting prompt: $e');
+      if (kDebugMode) {
+        print('❌ Error deleting prompt: $e');
+      }
       setState(() {
         _promptStatus = 'Error deleting prompt: $e';
       });
@@ -396,7 +428,9 @@ Always respond as if you're speaking directly to your client in a supportive con
       _selectedPrompt = null;
       _promptStatus = 'Reset to default prompt';
     });
-    print('🔄 Reset custom prompt to default');
+    if (kDebugMode) {
+      print('🔄 Reset custom prompt to default');
+    }
   }
 
   /// Show user management modal
@@ -413,13 +447,17 @@ Always respond as if you're speaking directly to your client in a supportive con
             _mcpService = MCPClientService(userId: user.id);
             _mcpService!.initialize().then((success) {
               if (success) {
-                print(
-                  '✅ MCP service initialized for user: ${user.friendlyName}',
-                );
+                if (kDebugMode) {
+                  print(
+                    '✅ MCP service initialized for user: ${user.friendlyName}',
+                  );
+                }
               } else {
-                print(
-                  '❌ Failed to initialize MCP service for user: ${user.friendlyName}',
-                );
+                if (kDebugMode) {
+                  print(
+                    '❌ Failed to initialize MCP service for user: ${user.friendlyName}',
+                  );
+                }
               }
             });
           });
@@ -435,12 +473,16 @@ Always respond as if you're speaking directly to your client in a supportive con
     final promptEditorContent = _customPromptController.text.trim();
 
     if (question.isEmpty) {
-      print('❌ Question is empty');
+      if (kDebugMode) {
+        print('❌ Question is empty');
+      }
       return;
     }
 
     if (_selectedUser == null) {
-      print('❌ No user selected for context');
+      if (kDebugMode) {
+        print('❌ No user selected for context');
+      }
       return;
     }
 
@@ -449,8 +491,10 @@ Always respond as if you're speaking directly to your client in a supportive con
     });
 
     try {
-      print('🔄 Submitting question: "$question"');
-      print('🔄 For user: ${_selectedUser!.friendlyName}');
+      if (kDebugMode) {
+        print('🔄 Submitting question: "$question"');
+        print('🔄 For user: ${_selectedUser!.friendlyName}');
+      }
 
       // Determine which prompt to use
       String systemPrompt;
@@ -462,7 +506,9 @@ Always respond as if you're speaking directly to your client in a supportive con
           promptEditorContent,
         );
         promptSource = 'custom prompt editor';
-        print('🔄 Using custom prompt from editor');
+        if (kDebugMode) {
+          print('🔄 Using custom prompt from editor');
+        }
       } else {
         systemPrompt = _buildSystemPromptWithUserContext(
           _selectedUser!,
@@ -480,7 +526,9 @@ Always respond as if you're speaking directly to your client in a supportive con
             duration: Duration(seconds: 3),
           ),
         );
-        print('🔄 Using default system prompt (editor was empty)');
+        if (kDebugMode) {
+          print('🔄 Using default system prompt (editor was empty)');
+        }
       }
 
       // Add user question to history
@@ -505,9 +553,13 @@ Always respond as if you're speaking directly to your client in a supportive con
       // Scroll to bottom to show new message
       _scrollToBottom();
 
-      print('✅ AI response received successfully using $promptSource');
+      if (kDebugMode) {
+        print('✅ AI response received successfully using $promptSource');
+      }
     } catch (e) {
-      print('❌ Error with AI request: $e');
+      if (kDebugMode) {
+        print('❌ Error with AI request: $e');
+      }
       // Add error to conversation history
       _conversationHistory.add(
         ChatMessage(
@@ -539,7 +591,9 @@ Always respond as if you're speaking directly to your client in a supportive con
         duration: Duration(seconds: 2),
       ),
     );
-    print('🔄 AI request cancellation requested by user');
+    if (kDebugMode) {
+      print('🔄 AI request cancellation requested by user');
+    }
   }
 
   /// Build system prompt with user context
@@ -562,26 +616,30 @@ Always respond as if you're speaking directly to your client in a supportive con
           user.healthGoals?.join(', ') ?? 'None specified',
         );
 
-    print('🔍 Final System Prompt:');
-    print('📝 User UUID: ${user.id}');
-    print('📧 User Email: ${user.email}');
-    print('👤 User Name: ${user.friendlyName}');
-    print('📄 Full System Prompt:\n$finalPrompt');
+    if (kDebugMode) {
+      print('🔍 Final System Prompt:');
+      print('📝 User UUID: ${user.id}');
+      print('📧 User Email: ${user.email}');
+      print('👤 User Name: ${user.friendlyName}');
+      print('📄 Full System Prompt:\n$finalPrompt');
+    }
     return finalPrompt;
   }
 
   /// Call OpenAI API with ReAct pattern and MCP function calling
   Future<String> _callOpenAI(String userMessage, String systemPrompt) async {
-    print('🔍 _callOpenAI called with userMessage: "$userMessage"');
-    print(
-      '📝 Current conversation history length: ${_conversationHistory.length}',
-    );
-    for (int i = 0; i < _conversationHistory.length; i++) {
-      final msg = _conversationHistory[i];
-      final preview = msg.message.length > 30
-          ? msg.message.substring(0, 30) + '...'
-          : msg.message;
-      print('   History ${i + 1}: ${msg.isUser ? 'User' : 'AI'}: $preview');
+    if (kDebugMode) {
+      print('🔍 _callOpenAI called with userMessage: "$userMessage"');
+      print(
+        '📝 Current conversation history length: ${_conversationHistory.length}',
+      );
+      for (int i = 0; i < _conversationHistory.length; i++) {
+        final msg = _conversationHistory[i];
+        final preview = msg.message.length > 30
+            ? msg.message.substring(0, 30) + '...'
+            : msg.message;
+        print('   History ${i + 1}: ${msg.isUser ? 'User' : 'AI'}: $preview');
+      }
     }
     final apiKey = OpenAIConfig.apiKey;
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
@@ -636,15 +694,17 @@ Always respond as if you're speaking directly to your client in a supportive con
     }
 
     if (historyToInclude.isNotEmpty) {
-      print(
-        '📚 Including ${historyToInclude.length} previous messages in AI context',
-      );
-      for (int i = 0; i < historyToInclude.length; i++) {
-        final chatMessage = historyToInclude[i];
-        final preview = chatMessage.message.length > 50
-            ? chatMessage.message.substring(0, 50) + '...'
-            : chatMessage.message;
-        print('   ${i + 1}. ${chatMessage.isUser ? 'User' : 'AI'}: $preview');
+      if (kDebugMode) {
+        print(
+          '📚 Including ${historyToInclude.length} previous messages in AI context',
+        );
+        for (int i = 0; i < historyToInclude.length; i++) {
+          final chatMessage = historyToInclude[i];
+          final preview = chatMessage.message.length > 50
+              ? chatMessage.message.substring(0, 50) + '...'
+              : chatMessage.message;
+          print('   ${i + 1}. ${chatMessage.isUser ? 'User' : 'AI'}: $preview');
+        }
       }
     }
 
@@ -658,19 +718,23 @@ Always respond as if you're speaking directly to your client in a supportive con
     // Add the current user message
     messages.add({'role': 'user', 'content': userMessage});
 
-    print('📤 Final messages being sent to OpenAI:');
-    for (int i = 0; i < messages.length; i++) {
-      final msg = messages[i];
-      final content = msg['content'] as String;
-      final preview = content.length > 50
-          ? content.substring(0, 50) + '...'
-          : content;
-      print('   ${i + 1}. ${msg['role']}: $preview');
+    if (kDebugMode) {
+      print('📤 Final messages being sent to OpenAI:');
+      for (int i = 0; i < messages.length; i++) {
+        final msg = messages[i];
+        final content = msg['content'] as String;
+        final preview = content.length > 50
+            ? content.substring(0, 50) + '...'
+            : content;
+        print('   ${i + 1}. ${msg['role']}: $preview');
+      }
     }
 
     try {
       // For simple conversation memory, make a single API call with full context
-      print('🔄 Making single API call with conversation context');
+      if (kDebugMode) {
+        print('🔄 Making single API call with conversation context');
+      }
 
       final body = json.encode({
         'model': 'gpt-3.5-turbo',
@@ -688,7 +752,9 @@ Always respond as if you're speaking directly to your client in a supportive con
       );
 
       if (response.statusCode != 200) {
-        print('OpenAI API Error: ${response.statusCode} - ${response.body}');
+        if (kDebugMode) {
+          print('OpenAI API Error: ${response.statusCode} - ${response.body}');
+        }
         return 'Error: Unable to get AI response. Status: ${response.statusCode}';
       }
 
@@ -707,9 +773,11 @@ Always respond as if you're speaking directly to your client in a supportive con
           final functionName = function['name'];
           final functionArgs = json.decode(function['arguments']);
 
-          print(
-            '🔧 AI is calling function: $functionName with args: $functionArgs',
-          );
+          if (kDebugMode) {
+            print(
+              '🔧 AI is calling function: $functionName with args: $functionArgs',
+            );
+          }
 
           // Call the appropriate MCP function
           String functionResult = await _executeMCPFunction(
@@ -725,9 +793,11 @@ Always respond as if you're speaking directly to your client in a supportive con
             'content': functionResult,
           });
 
-          print(
-            '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
-          );
+          if (kDebugMode) {
+            print(
+              '📊 Function result: ${functionResult.length > 100 ? functionResult.substring(0, 100) + "..." : functionResult}',
+            );
+          }
 
           // Make follow-up call to get final response
           final followUpBody = json.encode({
@@ -748,20 +818,26 @@ Always respond as if you're speaking directly to your client in a supportive con
             final followUpChoice = followUpData['choices'][0];
             final finalResponse =
                 followUpChoice['message']['content'] ?? 'No response';
-            print('✅ AI provided final response after tool call');
+            if (kDebugMode) {
+              print('✅ AI provided final response after tool call');
+            }
             return finalResponse;
           }
         }
       } else {
         // AI provided final response without tool call
         final finalResponse = message['content'] ?? 'No response';
-        print('✅ AI provided final response');
+        if (kDebugMode) {
+          print('✅ AI provided final response');
+        }
         return finalResponse;
       }
 
       return 'I gathered some health data but ran into processing limits. Please try asking a more specific question.';
     } catch (e) {
-      print('Network Error: $e');
+      if (kDebugMode) {
+        print('Network Error: $e');
+      }
       return 'Error: Network issue connecting to AI service.';
     }
   }
@@ -795,22 +871,51 @@ Always respond as if you're speaking directly to your client in a supportive con
           return 'Unknown function: $functionName';
       }
     } catch (e) {
-      print('❌ Error executing MCP function $functionName: $e');
+      if (kDebugMode) {
+        print('❌ Error executing MCP function $functionName: $e');
+      }
       return 'Error executing $functionName: $e';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 900;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final isWideScreen = screenWidth > 800; // Lowered breakpoint for better web detection
 
-    return isWideScreen
-        ? _buildWideLayoutWithHeight(context)
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: _buildNarrowLayout(),
-          );
+        // Debug logging for web deployment (throttled to reduce spam)
+        final currentTime = DateTime.now().millisecondsSinceEpoch;
+        if (_lastDebugTime == null || currentTime - _lastDebugTime! > 1000) { // Only log once per second
+          if (kDebugMode) {
+            print('📱 LayoutBuilder dimensions: ${screenWidth.toInt()}x${screenHeight.toInt()}, isWideScreen: $isWideScreen');
+          }
+          _lastDebugTime = currentTime;
+        }
+
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          child: isWideScreen
+              ? Container(
+                  key: const ValueKey('wide'), // Key for AnimatedSwitcher
+                  child: _buildWideLayoutWithHeight(context),
+                )
+              : SingleChildScrollView(
+                  key: const ValueKey('narrow'), // Key for AnimatedSwitcher
+                  padding: const EdgeInsets.all(16.0),
+                  child: _buildNarrowLayout(),
+                ),
+        );
+      },
+    );
   }
 
   /// Build wide layout with bounded height
@@ -833,11 +938,11 @@ Always respond as if you're speaking directly to your client in a supportive con
       children: [
         _buildUserSelectionCard(),
         const SizedBox(height: 16),
-        _buildConversationHistoryCard(),
+        Expanded(child: _buildConversationHistoryCard()),
         const SizedBox(height: 16),
         _buildQuestionInputCard(),
         const SizedBox(height: 16),
-        _buildCustomPromptCard(),
+        Expanded(child: _buildCustomPromptCard()),
         const SizedBox(height: 20),
       ],
     );
@@ -959,9 +1064,11 @@ Always respond as if you're speaking directly to your client in a supportive con
                     _mcpService = MCPClientService(userId: newValue.id);
                     _mcpService!.initialize().then((success) {
                       if (success) {
-                        print(
-                          '✅ MCP service initialized for user: ${newValue.friendlyName}',
-                        );
+                        if (kDebugMode) {
+                          print(
+                            '✅ MCP service initialized for user: ${newValue.friendlyName}',
+                          );
+                        }
                         // Show success message
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -973,9 +1080,11 @@ Always respond as if you're speaking directly to your client in a supportive con
                           ),
                         );
                       } else {
-                        print(
-                          '❌ Failed to initialize MCP service for user: ${newValue.friendlyName}',
-                        );
+                        if (kDebugMode) {
+                          print(
+                            '❌ Failed to initialize MCP service for user: ${newValue.friendlyName}',
+                          );
+                        }
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Failed to initialize user context'),
@@ -1398,9 +1507,11 @@ Always respond as if you're speaking directly to your client in a supportive con
                     onPressed: () {
                       setState(() {
                         _conversationHistory.clear();
-                        print(
-                          '🧹 Conversation history cleared - AI context reset',
-                        );
+                        if (kDebugMode) {
+                          print(
+                            '🧹 Conversation history cleared - AI context reset',
+                          );
+                        }
                       });
                       // Show confirmation message
                       ScaffoldMessenger.of(context).showSnackBar(
