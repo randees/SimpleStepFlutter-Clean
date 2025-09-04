@@ -326,7 +326,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       _customPromptController.text = prompt.promptText;
       _promptStatus = 'Loaded prompt: ${prompt.promptName}';
     });
-    print('� Loaded prompt: ${prompt.promptName}');
+    print('✅ Loaded prompt: ${prompt.promptName}');
   }
 
   /// Delete a saved prompt
@@ -429,81 +429,10 @@ Always respond as if you're speaking directly to your client in a supportive con
     );
   }
 
-  /// Submit question with custom system prompt
-  Future<void> _submitQuestionCustom() async {
+  /// Submit question using prompt editor content with fallback to default
+  Future<void> _submitQuestionWithPromptEditor() async {
     final question = _questionController.text.trim();
-    final customPrompt = _customPromptController.text.trim();
-
-    if (question.isEmpty) {
-      print('❌ Custom question is empty');
-      return;
-    }
-
-    if (_selectedUser == null) {
-      print('❌ No user selected for context');
-      return;
-    }
-
-    setState(() {
-      _isAiProcessing = true;
-    });
-
-    try {
-      print('🔄 Submitting custom question: "$question"');
-      print('🔄 Using custom prompt: ${customPrompt.substring(0, 100)}...');
-      print('🔄 For user: ${_selectedUser!.friendlyName}');
-
-      // Add user question to history
-      _conversationHistory.add(
-        ChatMessage(message: question, isUser: true, timestamp: DateTime.now()),
-      );
-
-      // Clear the question input field
-      _questionController.clear();
-
-      final systemPrompt = _buildSystemPromptWithUserContext(
-        _selectedUser!,
-        customPrompt,
-      );
-
-      final response = await _callOpenAI(question, systemPrompt);
-
-      // Add AI response to history
-      _conversationHistory.add(
-        ChatMessage(
-          message: response,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
-
-      // Scroll to bottom to show new message
-      _scrollToBottom();
-
-      print('✅ Custom AI response received successfully');
-    } catch (e) {
-      print('❌ Error with custom AI request: $e');
-      // Add error to conversation history
-      _conversationHistory.add(
-        ChatMessage(
-          message: 'Sorry, there was an error processing your request: $e',
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
-
-      // Scroll to bottom to show new message
-      _scrollToBottom();
-    } finally {
-      setState(() {
-        _isAiProcessing = false;
-      });
-    }
-  }
-
-  /// Submit question using default system prompt
-  Future<void> _submitQuestion() async {
-    final question = _questionController.text.trim();
+    final promptEditorContent = _customPromptController.text.trim();
 
     if (question.isEmpty) {
       print('❌ Question is empty');
@@ -523,6 +452,37 @@ Always respond as if you're speaking directly to your client in a supportive con
       print('🔄 Submitting question: "$question"');
       print('🔄 For user: ${_selectedUser!.friendlyName}');
 
+      // Determine which prompt to use
+      String systemPrompt;
+      String promptSource;
+
+      if (promptEditorContent.isNotEmpty) {
+        systemPrompt = _buildSystemPromptWithUserContext(
+          _selectedUser!,
+          promptEditorContent,
+        );
+        promptSource = 'custom prompt editor';
+        print('🔄 Using custom prompt from editor');
+      } else {
+        systemPrompt = _buildSystemPromptWithUserContext(
+          _selectedUser!,
+          _defaultSystemPrompt,
+        );
+        promptSource = 'default system prompt';
+
+        // Show notification about using default prompt
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Using default system prompt (prompt editor was empty)',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        print('🔄 Using default system prompt (editor was empty)');
+      }
+
       // Add user question to history
       _conversationHistory.add(
         ChatMessage(message: question, isUser: true, timestamp: DateTime.now()),
@@ -530,11 +490,6 @@ Always respond as if you're speaking directly to your client in a supportive con
 
       // Clear the question input field
       _questionController.clear();
-
-      final systemPrompt = _buildSystemPromptWithUserContext(
-        _selectedUser!,
-        _defaultSystemPrompt,
-      );
 
       final response = await _callOpenAI(question, systemPrompt);
 
@@ -550,7 +505,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       // Scroll to bottom to show new message
       _scrollToBottom();
 
-      print('✅ AI response received successfully');
+      print('✅ AI response received successfully using $promptSource');
     } catch (e) {
       print('❌ Error with AI request: $e');
       // Add error to conversation history
@@ -569,6 +524,22 @@ Always respond as if you're speaking directly to your client in a supportive con
         _isAiProcessing = false;
       });
     }
+  }
+
+  /// Cancel current AI request
+  void _cancelAiRequest() {
+    // For now, just show a message since we can't actually cancel HTTP requests easily
+    // In a more advanced implementation, you could use a cancellation token
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Request cancellation requested - please wait for current request to complete',
+        ),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    print('🔄 AI request cancellation requested by user');
   }
 
   /// Build system prompt with user context
@@ -877,24 +848,22 @@ Always respond as if you're speaking directly to your client in a supportive con
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Left column - User selection and custom prompt
+        // Left column - Custom prompt (more space now)
         Expanded(
           flex: 1,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildUserSelectionCard(),
-              const SizedBox(height: 16),
-              Expanded(child: _buildCustomPromptCard()),
-            ],
+            children: [Expanded(child: _buildCustomPromptCard())],
           ),
         ),
         const SizedBox(width: 24),
-        // Right column - Conversation history and question input
+        // Right column - User selection, conversation history and question input
         Expanded(
           flex: 1,
           child: Column(
             children: [
+              _buildUserSelectionCard(),
+              const SizedBox(height: 16),
               Expanded(child: _buildConversationHistoryCard()),
               const SizedBox(height: 16),
               _buildQuestionInputCard(),
@@ -1080,7 +1049,7 @@ Always respond as if you're speaking directly to your client in a supportive con
                   child: ElevatedButton(
                     onPressed: _isAiProcessing || _selectedUser == null
                         ? null
-                        : _submitQuestion,
+                        : _submitQuestionWithPromptEditor,
                     child: _isAiProcessing
                         ? const SizedBox(
                             width: 16,
@@ -1091,16 +1060,21 @@ Always respond as if you're speaking directly to your client in a supportive con
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isAiProcessing || _selectedUser == null
-                        ? null
-                        : _submitQuestionCustom,
-                    icon: const Icon(Icons.psychology, size: 16),
-                    label: const Text('Ask Health AI Custom'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple.shade100,
-                      foregroundColor: Colors.purple.shade700,
+                SizedBox(
+                  width: 100,
+                  child: TextButton(
+                    onPressed: _isAiProcessing ? _cancelAiRequest : null,
+                    style: TextButton.styleFrom(
+                      backgroundColor: _isAiProcessing
+                          ? Colors.red.shade100
+                          : Colors.grey.shade200,
+                      foregroundColor: _isAiProcessing
+                          ? Colors.red.shade700
+                          : Colors.grey.shade500,
+                    ),
+                    child: Text(
+                      _isAiProcessing ? 'Cancel' : 'Cancel',
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ),
