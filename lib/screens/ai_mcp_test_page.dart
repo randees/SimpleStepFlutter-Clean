@@ -244,7 +244,9 @@ Always respond as if you're speaking directly to your client in a supportive con
     });
 
     try {
-      final prompts = await CustomPromptsService.getCustomPrompts('goal_setting');
+      final prompts = await CustomPromptsService.getCustomPrompts(
+        'goal_setting',
+      );
       setState(() {
         _savedPrompts = prompts;
         _promptStatus = 'Loaded ${prompts.length} saved prompts';
@@ -333,7 +335,9 @@ Always respond as if you're speaking directly to your client in a supportive con
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Prompt'),
-        content: Text('Are you sure you want to delete "${prompt.promptName}"?'),
+        content: Text(
+          'Are you sure you want to delete "${prompt.promptName}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -869,7 +873,9 @@ Always respond as if you're speaking directly to your client in a supportive con
               ),
             const SizedBox(height: 8),
             DropdownButtonFormField<UserModel>(
-              initialValue: _users.contains(_selectedUser) ? _selectedUser : null,
+              initialValue: _users.contains(_selectedUser)
+                  ? _selectedUser
+                  : null,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(
@@ -1036,7 +1042,10 @@ Always respond as if you're speaking directly to your client in a supportive con
             // Status message
             if (_promptStatus.isNotEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _promptStatus.contains('Error')
                       ? Colors.red.shade50
@@ -1175,7 +1184,10 @@ Always respond as if you're speaking directly to your client in a supportive con
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Enter a name for this prompt...',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
             const SizedBox(height: 8),

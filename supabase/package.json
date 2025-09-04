@@ -2,7 +2,6 @@
   "name": "supabase",
   "version": "1.0.0",
   "description": "This directory contains all Supabase-related configuration, database migrations, seed data, and utilities.",
-  "main": "cleanup_database.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -25,7 +25,9 @@ class CustomPromptsService {
     String promptTypeId,
   ) async {
     try {
-      print('🔄 CustomPromptsService: Fetching prompts for type: $promptTypeId');
+      print(
+        '🔄 CustomPromptsService: Fetching prompts for type: $promptTypeId',
+      );
 
       // Use admin client to bypass RLS for custom prompts (they're system-level)
       final response = await SupabaseService.adminClient
@@ -89,7 +91,9 @@ class CustomPromptsService {
     required String promptName,
   }) async {
     try {
-      print('🔄 CustomPromptsService: Creating prompt "$promptName" for type: $promptTypeId');
+      print(
+        '🔄 CustomPromptsService: Creating prompt "$promptName" for type: $promptTypeId',
+      );
 
       // Use admin client to bypass RLS for custom prompts (they're system-level)
       final response = await SupabaseService.adminClient

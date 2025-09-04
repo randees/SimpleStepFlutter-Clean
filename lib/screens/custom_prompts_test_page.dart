@@ -31,7 +31,9 @@ class _CustomPromptsTestPageState extends State<CustomPromptsTestPage> {
       setState(() {
         _status = 'Fetching existing prompts...';
       });
-      final prompts = await CustomPromptsService.getCustomPrompts('goal_setting');
+      final prompts = await CustomPromptsService.getCustomPrompts(
+        'goal_setting',
+      );
       setState(() {
         _prompts = prompts;
         _status = 'Found ${prompts.length} existing prompts';
@@ -49,15 +51,19 @@ class _CustomPromptsTestPageState extends State<CustomPromptsTestPage> {
 
       if (testPrompt != null) {
         setState(() {
-          _status = '✅ Test prompt created successfully: ${testPrompt.promptName}';
+          _status =
+              '✅ Test prompt created successfully: ${testPrompt.promptName}';
         });
 
         // Test 3: Refresh the list to see the new prompt
         await Future.delayed(const Duration(seconds: 1));
-        final updatedPrompts = await CustomPromptsService.getCustomPrompts('goal_setting');
+        final updatedPrompts = await CustomPromptsService.getCustomPrompts(
+          'goal_setting',
+        );
         setState(() {
           _prompts = updatedPrompts;
-          _status = '✅ All tests passed! Created and retrieved ${updatedPrompts.length} prompts';
+          _status =
+              '✅ All tests passed! Created and retrieved ${updatedPrompts.length} prompts';
         });
       } else {
         setState(() {
@@ -78,9 +84,7 @@ class _CustomPromptsTestPageState extends State<CustomPromptsTestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Custom Prompts Test'),
-      ),
+      appBar: AppBar(title: const Text('Custom Prompts Test')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
