@@ -46,10 +46,12 @@ class ServiceLocator {
 
       if (kDebugMode) {
         print('✅ ServiceLocator: All services initialized successfully');
+        print('✅ ServiceLocator: Supabase client available');
       }
     } catch (e) {
       if (kDebugMode) {
         print('❌ ServiceLocator: Initialization failed: $e');
+        print('❌ ServiceLocator: Supabase client check failed');
       }
       rethrow;
     }

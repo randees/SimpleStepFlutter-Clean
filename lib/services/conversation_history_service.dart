@@ -1,10 +1,20 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import '../../models/conversation_message.dart';
+import 'supabase_service.dart';
 
 /// Service for managing persistent conversation history in the database
 class ConversationHistoryService {
-  SupabaseClient get _supabase => Supabase.instance.client;
+  SupabaseClient get _supabase {
+    try {
+      return SupabaseService.adminClient;
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Admin client not available, falling back to regular client: $e');
+      }
+      return SupabaseService.client;
+    }
+  }
 
   /// Save a message to the conversation history
   Future<void> saveMessage({

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:math';
 import 'dart:async';
+import 'package:uuid/uuid.dart';
 import '../conversation_history_service.dart';
 
 /// Model for chat messages
@@ -21,8 +21,8 @@ class ChatMessage {
 class ConversationService {
   final List<ChatMessage> _messages = [];
   final ScrollController scrollController = ScrollController();
-  final ConversationHistoryService _historyService = ConversationHistoryService();
-  final Random _random = Random();
+  ConversationHistoryService? _historyService;
+  final Uuid _uuid = Uuid();
 
   // Current session ID for grouping messages
   String? _currentSessionId;
@@ -33,6 +33,12 @@ class ConversationService {
   int get messageCount => _messages.length;
 
   bool get isEmpty => _messages.isEmpty;
+
+  /// Get the history service (lazy-loaded)
+  ConversationHistoryService get _getHistoryService {
+    _historyService ??= ConversationHistoryService();
+    return _historyService!;
+  }
 
   /// Initialize the service with user context
   void initialize(String userId) {
@@ -49,7 +55,7 @@ class ConversationService {
         print('📚 Loading conversation history for user: $_currentUserId');
       }
 
-      final historyMessages = await _historyService.getUserConversationHistory(
+      final historyMessages = await _getHistoryService.getUserConversationHistory(
         _currentUserId!,
         limit: limit,
       ).timeout(
@@ -107,6 +113,15 @@ class ConversationService {
   /// Persist message to database
   Future<void> _persistMessage(ChatMessage message, {Map<String, dynamic>? metadata}) async {
     try {
+      // Check if we have the required IDs
+      if (_currentUserId == null || _currentSessionId == null) {
+        if (kDebugMode) {
+          print('⚠️ Cannot persist message: userId or sessionId is null');
+          print('⚠️ Current userId: $_currentUserId, sessionId: $_currentSessionId');
+        }
+        return;
+      }
+
       // Merge default metadata with provided metadata
       final defaultMetadata = {
         'timestamp': message.timestamp.toIso8601String(),
@@ -115,7 +130,14 @@ class ConversationService {
 
       final mergedMetadata = {...defaultMetadata, ...?metadata};
 
-      await _historyService.saveMessage(
+      if (kDebugMode) {
+        print('💾 Persisting message to database...');
+        print('💾 UserId: $_currentUserId, SessionId: $_currentSessionId');
+        print('💾 Message type: ${message.isUser ? 'user' : 'assistant'}');
+        print('💾 Message length: ${message.message.length}');
+      }
+
+      await _getHistoryService.saveMessage(
         userId: _currentUserId!,
         sessionId: _currentSessionId!,
         messageContent: message.message,
@@ -124,9 +146,16 @@ class ConversationService {
         modelUsed: 'gpt-3.5-turbo', // Could be made configurable
         metadata: mergedMetadata,
       );
+
+      if (kDebugMode) {
+        print('✅ Message persisted successfully');
+      }
     } catch (e) {
       // Log error but don't interrupt user experience
-      print('Error persisting message: $e');
+      if (kDebugMode) {
+        print('❌ Error persisting message: $e');
+        print('❌ Stack trace: ${StackTrace.current}');
+      }
     }
   }
 
@@ -138,8 +167,7 @@ class ConversationService {
 
   /// Generate a simple session ID
   String _generateSessionId() {
-    return DateTime.now().millisecondsSinceEpoch.toString() +
-           _random.nextInt(999999).toString().padLeft(6, '0');
+    return _uuid.v4();
   }
 
   void _scrollToBottom() {
