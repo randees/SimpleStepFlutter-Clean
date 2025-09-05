@@ -119,7 +119,7 @@ Always respond as if you're speaking directly to your client in a supportive con
   void dispose() {
     // Save conversation before disposing
     _saveCurrentConversation();
-    
+
     _questionController.dispose();
     _customPromptController.dispose();
     _promptNameController.dispose();
@@ -202,7 +202,9 @@ Always respond as if you're speaking directly to your client in a supportive con
       await _conversationService.loadConversationHistory();
 
       if (kDebugMode) {
-        print('✅ Conversation service initialized for user: ${user.friendlyName}');
+        print(
+          '✅ Conversation service initialized for user: ${user.friendlyName}',
+        );
       }
     } catch (e) {
       if (kDebugMode) {

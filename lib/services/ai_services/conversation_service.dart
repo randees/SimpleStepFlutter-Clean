@@ -55,18 +55,17 @@ class ConversationService {
         print('📚 Loading conversation history for user: $_currentUserId');
       }
 
-      final historyMessages = await _getHistoryService.getUserConversationHistory(
-        _currentUserId!,
-        limit: limit,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          if (kDebugMode) {
-            print('⏰ Timeout loading conversation history');
-          }
-          return [];
-        },
-      );
+      final historyMessages = await _getHistoryService
+          .getUserConversationHistory(_currentUserId!, limit: limit)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              if (kDebugMode) {
+                print('⏰ Timeout loading conversation history');
+              }
+              return [];
+            },
+          );
 
       if (kDebugMode) {
         print('📚 Retrieved ${historyMessages.length} messages from database');
@@ -74,11 +73,13 @@ class ConversationService {
 
       _messages.clear();
       for (final message in historyMessages) {
-        _messages.add(ChatMessage(
-          message: message.messageContent,
-          isUser: message.messageType == 'user',
-          timestamp: message.createdAt,
-        ));
+        _messages.add(
+          ChatMessage(
+            message: message.messageContent,
+            isUser: message.messageType == 'user',
+            timestamp: message.createdAt,
+          ),
+        );
       }
 
       _scrollToBottom();
@@ -94,7 +95,11 @@ class ConversationService {
     }
   }
 
-  void addMessage(String message, bool isUser, {Map<String, dynamic>? metadata}) {
+  void addMessage(
+    String message,
+    bool isUser, {
+    Map<String, dynamic>? metadata,
+  }) {
     final chatMessage = ChatMessage(
       message: message,
       isUser: isUser,
@@ -111,13 +116,18 @@ class ConversationService {
   }
 
   /// Persist message to database
-  Future<void> _persistMessage(ChatMessage message, {Map<String, dynamic>? metadata}) async {
+  Future<void> _persistMessage(
+    ChatMessage message, {
+    Map<String, dynamic>? metadata,
+  }) async {
     try {
       // Check if we have the required IDs
       if (_currentUserId == null || _currentSessionId == null) {
         if (kDebugMode) {
           print('⚠️ Cannot persist message: userId or sessionId is null');
-          print('⚠️ Current userId: $_currentUserId, sessionId: $_currentSessionId');
+          print(
+            '⚠️ Current userId: $_currentUserId, sessionId: $_currentSessionId',
+          );
         }
         return;
       }

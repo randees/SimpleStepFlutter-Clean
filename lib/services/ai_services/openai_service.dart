@@ -41,14 +41,16 @@ class OpenAIService {
     // Validate API key
     if (apiKey.isEmpty || apiKey == 'REPLACE_WITH_YOUR_OPENAI_API_KEY') {
       return OpenAIResponse(
-        content: 'Error: OpenAI API key not configured. Please set OPENAI_API_KEY in your .env file.',
+        content:
+            'Error: OpenAI API key not configured. Please set OPENAI_API_KEY in your .env file.',
         model: 'gpt-3.5-turbo',
       );
     }
 
     if (!OpenAIConfig.hasValidApiKeyFormat) {
       return OpenAIResponse(
-        content: 'Error: Invalid OpenAI API key format. Please check your OPENAI_API_KEY in the .env file.',
+        content:
+            'Error: Invalid OpenAI API key format. Please check your OPENAI_API_KEY in the .env file.',
         model: 'gpt-3.5-turbo',
       );
     }
@@ -104,7 +106,8 @@ class OpenAIService {
           print('OpenAI API Error: ${response.statusCode} - ${response.body}');
         }
         return OpenAIResponse(
-          content: 'Error: Unable to get AI response. Status: ${response.statusCode}',
+          content:
+              'Error: Unable to get AI response. Status: ${response.statusCode}',
           model: 'gpt-3.5-turbo',
         );
       }
@@ -183,7 +186,8 @@ class OpenAIService {
       }
 
       return OpenAIResponse(
-        content: 'I gathered some health data but ran into processing limits. Please try asking a more specific question.',
+        content:
+            'I gathered some health data but ran into processing limits. Please try asking a more specific question.',
         model: 'gpt-3.5-turbo',
       );
     } catch (e) {

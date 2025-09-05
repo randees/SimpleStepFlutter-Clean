@@ -10,7 +10,9 @@ class ConversationHistoryService {
       return SupabaseService.adminClient;
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ Admin client not available, falling back to regular client: $e');
+        print(
+          '⚠️ Admin client not available, falling back to regular client: $e',
+        );
       }
       return SupabaseService.client;
     }
@@ -70,11 +72,16 @@ class ConversationHistoryService {
 
       final response = await query;
       final messages = (response as List<dynamic>)
-          .map((json) => ConversationMessage.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                ConversationMessage.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
 
       if (kDebugMode) {
-        print('📚 Retrieved ${messages.length} messages from conversation history');
+        print(
+          '📚 Retrieved ${messages.length} messages from conversation history',
+        );
       }
 
       return messages.reversed.toList(); // Return in chronological order
@@ -87,7 +94,9 @@ class ConversationHistoryService {
   }
 
   /// Get conversation sessions for a user
-  Future<List<Map<String, dynamic>>> getUserConversationSessions(String userId) async {
+  Future<List<Map<String, dynamic>>> getUserConversationSessions(
+    String userId,
+  ) async {
     try {
       final response = await _supabase
           .from('conversation_sessions')
@@ -114,7 +123,10 @@ class ConversationHistoryService {
           .order('created_at', ascending: true);
 
       return (response as List<dynamic>)
-          .map((json) => ConversationMessage.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                ConversationMessage.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       if (kDebugMode) {
@@ -178,7 +190,8 @@ class ConversationHistoryService {
       // Count messages by type
       for (final message in messages) {
         final messageType = message['message_type'] as String;
-        stats['${messageType}_count'] = (stats['${messageType}_count'] ?? 0) + 1;
+        stats['${messageType}_count'] =
+            (stats['${messageType}_count'] ?? 0) + 1;
       }
 
       // Get session count

@@ -60,11 +60,15 @@ class ServiceLocator {
   /// Get conversation service
   ConversationService get conversationService {
     if (kDebugMode) {
-      print('🔍 ServiceLocator: Getting conversation service, initialized: $_isInitialized');
+      print(
+        '🔍 ServiceLocator: Getting conversation service, initialized: $_isInitialized',
+      );
     }
     _ensureInitialized();
     if (kDebugMode) {
-      print('✅ ServiceLocator: Returning conversation service: $_conversationService');
+      print(
+        '✅ ServiceLocator: Returning conversation service: $_conversationService',
+      );
     }
     return _conversationService;
   }
