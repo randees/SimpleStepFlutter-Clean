@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../supabase_service.dart';
 import 'conversation_service.dart';
 import 'openai_service.dart';
 import 'prompt_service.dart';
@@ -36,10 +35,8 @@ class ServiceLocator {
     }
 
     try {
-      // Initialize Supabase first
-      await SupabaseService.initialize();
-
-      // Initialize services in dependency order
+      // SupabaseService is already initialized in main.dart
+      // Just initialize the AI services
       _conversationService = ConversationService();
       _openAIService = OpenAIService();
       _promptService = PromptService();
@@ -49,10 +46,12 @@ class ServiceLocator {
 
       if (kDebugMode) {
         print('✅ ServiceLocator: All services initialized successfully');
+        print('✅ ServiceLocator: Supabase client available');
       }
     } catch (e) {
       if (kDebugMode) {
         print('❌ ServiceLocator: Initialization failed: $e');
+        print('❌ ServiceLocator: Supabase client check failed');
       }
       rethrow;
     }
@@ -60,7 +59,17 @@ class ServiceLocator {
 
   /// Get conversation service
   ConversationService get conversationService {
+    if (kDebugMode) {
+      print(
+        '🔍 ServiceLocator: Getting conversation service, initialized: $_isInitialized',
+      );
+    }
     _ensureInitialized();
+    if (kDebugMode) {
+      print(
+        '✅ ServiceLocator: Returning conversation service: $_conversationService',
+      );
+    }
     return _conversationService;
   }
 

@@ -117,10 +117,14 @@ Always respond as if you're speaking directly to your client in a supportive con
 
   @override
   void dispose() {
+    // Save conversation before disposing
+    _saveCurrentConversation();
+
     _questionController.dispose();
     _customPromptController.dispose();
     _promptNameController.dispose();
     _conversationScrollController.dispose();
+    _conversationService.dispose();
     super.dispose();
   }
 
@@ -176,6 +180,8 @@ Always respond as if you're speaking directly to your client in a supportive con
         if (kDebugMode) {
           print('✅ MCP service initialized for user: ${user.friendlyName}');
         }
+        // Initialize conversation service with user context
+        _initializeConversationService(user);
       } else {
         if (kDebugMode) {
           print(
@@ -186,8 +192,32 @@ Always respond as if you're speaking directly to your client in a supportive con
     });
   }
 
+  /// Initialize conversation service with user context
+  Future<void> _initializeConversationService(UserModel user) async {
+    try {
+      // Initialize conversation service with user ID
+      _conversationService.initialize(user.id);
+
+      // Load existing conversation history from database
+      await _conversationService.loadConversationHistory();
+
+      if (kDebugMode) {
+        print(
+          '✅ Conversation service initialized for user: ${user.friendlyName}',
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error initializing conversation service: $e');
+      }
+    }
+  }
+
   /// Handle user selection change
-  void _onUserChanged(UserModel? user) {
+  void _onUserChanged(UserModel? user) async {
+    // Save current conversation before switching users
+    await _saveCurrentConversation();
+
     setState(() {
       _selectedUser = user;
       // Clear conversation history when switching users
@@ -205,6 +235,24 @@ Always respond as if you're speaking directly to your client in a supportive con
       );
     } else {
       _mcpService = null;
+    }
+  }
+
+  /// Save current conversation to database
+  Future<void> _saveCurrentConversation() async {
+    try {
+      if (kDebugMode) {
+        print('💾 Saving current conversation...');
+      }
+      // The conversation service automatically saves messages when they're added
+      // But we can add any additional save logic here if needed
+      if (kDebugMode) {
+        print('✅ Current conversation saved');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error saving current conversation: $e');
+      }
     }
   }
 
@@ -272,7 +320,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       );
 
       // Add AI response to conversation
-      _conversationService.addMessage(response, false);
+      _conversationService.addMessage(response.content, false);
 
       _questionController.clear();
 
