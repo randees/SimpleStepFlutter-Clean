@@ -531,9 +531,7 @@ Always respond as if you're speaking directly to your client in a supportive con
   Widget _buildWideLayout(BoxConstraints constraints) {
     // Check if services are initialized
     if (!_servicesInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     final availableHeight = constraints.maxHeight - kToolbarHeight - 32;
@@ -604,9 +602,7 @@ Always respond as if you're speaking directly to your client in a supportive con
   Widget _buildNarrowLayout(BoxConstraints constraints) {
     // Check if services are initialized
     if (!_servicesInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     final availableHeight = constraints.maxHeight - kToolbarHeight - 32;
