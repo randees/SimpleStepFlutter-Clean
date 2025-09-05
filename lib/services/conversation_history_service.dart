@@ -10,7 +10,9 @@ class ConversationHistoryService {
       return SupabaseService.adminClient;
     } catch (e) {
       // Always log fallback (not just in debug mode) for production debugging
-      print('⚠️ Admin client not available, falling back to regular client: $e');
+      print(
+        '⚠️ Admin client not available, falling back to regular client: $e',
+      );
       return SupabaseService.client;
     }
   }

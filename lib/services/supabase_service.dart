@@ -21,7 +21,9 @@ class SupabaseService {
   static SupabaseClient get adminClient {
     if (_adminClient == null) {
       // Always log this error (not just in debug mode) for production debugging
-      print('❌ Supabase admin client not initialized. Call initialize() first.');
+      print(
+        '❌ Supabase admin client not initialized. Call initialize() first.',
+      );
       throw Exception(
         'Supabase admin client not initialized. Call initialize() first.',
       );
