@@ -9,11 +9,8 @@ class ConversationHistoryService {
     try {
       return SupabaseService.adminClient;
     } catch (e) {
-      if (kDebugMode) {
-        print(
-          '⚠️ Admin client not available, falling back to regular client: $e',
-        );
-      }
+      // Always log fallback (not just in debug mode) for production debugging
+      print('⚠️ Admin client not available, falling back to regular client: $e');
       return SupabaseService.client;
     }
   }
@@ -41,13 +38,11 @@ class ConversationHistoryService {
         'metadata': metadata,
       });
 
-      if (kDebugMode) {
-        print('✅ Message saved to conversation history');
-      }
+      // Always log success (not just in debug mode)
+      print('✅ Message saved to conversation history');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error saving message to conversation history: $e');
-      }
+      // Always log errors (not just in debug mode) for production debugging
+      print('❌ Error saving message to conversation history: $e');
       rethrow;
     }
   }

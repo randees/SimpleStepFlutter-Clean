@@ -2,6 +2,11 @@ services:
   - type: web
     name: simple-step-flutter
     env: node
-    buildCommand: npm install
+    buildCommand: |
+      npm install &&
+      flutter pub get &&
+      flutter build web --release \
+        --dart-define=FLUTTER_ENV=production \
+        --dart-define=DEBUG_MODE=false
     startCommand: node simple-server.js
     pullRequestPreviewsEnabled: false

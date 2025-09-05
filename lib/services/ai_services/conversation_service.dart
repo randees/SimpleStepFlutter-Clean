@@ -162,10 +162,9 @@ class ConversationService {
       }
     } catch (e) {
       // Log error but don't interrupt user experience
-      if (kDebugMode) {
-        print('❌ Error persisting message: $e');
-        print('❌ Stack trace: ${StackTrace.current}');
-      }
+      // Always log errors (not just in debug mode) for production debugging
+      print('❌ Error persisting message: $e');
+      print('❌ Stack trace: ${StackTrace.current}');
     }
   }
 
