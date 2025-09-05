@@ -71,7 +71,9 @@ class ConversationService {
             },
           );
 
-      print('📚 [LOAD HISTORY] Retrieved ${historyMessages.length} messages from database');
+      print(
+        '📚 [LOAD HISTORY] Retrieved ${historyMessages.length} messages from database',
+      );
 
       _messages.clear();
       for (final message in historyMessages) {
@@ -119,10 +121,14 @@ class ConversationService {
 
     // Persist to database asynchronously
     if (_currentUserId != null && _currentSessionId != null) {
-      print('📝 [ADD MESSAGE] User and session IDs available, attempting persistence...');
+      print(
+        '📝 [ADD MESSAGE] User and session IDs available, attempting persistence...',
+      );
       _persistMessage(chatMessage, metadata: metadata);
     } else {
-      print('⚠️ [ADD MESSAGE] User ID or Session ID missing, skipping persistence');
+      print(
+        '⚠️ [ADD MESSAGE] User ID or Session ID missing, skipping persistence',
+      );
       print('⚠️ [ADD MESSAGE] Current userId: $_currentUserId');
       print('⚠️ [ADD MESSAGE] Current sessionId: $_currentSessionId');
     }
@@ -134,9 +140,15 @@ class ConversationService {
     Map<String, dynamic>? metadata,
   }) async {
     print('💾 [PERSIST MESSAGE] Starting message persistence...');
-    print('💾 [PERSIST MESSAGE] Message type: ${message.isUser ? 'USER' : 'ASSISTANT'}');
-    print('💾 [PERSIST MESSAGE] Message length: ${message.message.length} chars');
-    print('💾 [PERSIST MESSAGE] Timestamp: ${message.timestamp.toIso8601String()}');
+    print(
+      '💾 [PERSIST MESSAGE] Message type: ${message.isUser ? 'USER' : 'ASSISTANT'}',
+    );
+    print(
+      '💾 [PERSIST MESSAGE] Message length: ${message.message.length} chars',
+    );
+    print(
+      '💾 [PERSIST MESSAGE] Timestamp: ${message.timestamp.toIso8601String()}',
+    );
 
     try {
       // Check if we have the required IDs
@@ -144,7 +156,9 @@ class ConversationService {
         print('⚠️ [PERSIST MESSAGE] MISSING REQUIRED DATA');
         print('⚠️ [PERSIST MESSAGE] Current userId: $_currentUserId');
         print('⚠️ [PERSIST MESSAGE] Current sessionId: $_currentSessionId');
-        print('⚠️ [PERSIST MESSAGE] Cannot persist message: userId or sessionId is null');
+        print(
+          '⚠️ [PERSIST MESSAGE] Cannot persist message: userId or sessionId is null',
+        );
         return;
       }
 
