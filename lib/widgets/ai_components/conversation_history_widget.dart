@@ -172,7 +172,8 @@ class _ConversationHistoryWidgetState extends State<ConversationHistoryWidget> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -187,7 +188,9 @@ class _ConversationHistoryWidgetState extends State<ConversationHistoryWidget> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            message.isUser ? 'You' : 'AI Assistant',
+                                            message.isUser
+                                                ? 'You'
+                                                : 'AI Assistant',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: message.isUser
@@ -261,7 +264,8 @@ class _ConversationHistoryWidgetState extends State<ConversationHistoryWidget> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -276,7 +280,9 @@ class _ConversationHistoryWidgetState extends State<ConversationHistoryWidget> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            message.isUser ? 'You' : 'AI Assistant',
+                                            message.isUser
+                                                ? 'You'
+                                                : 'AI Assistant',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: message.isUser
