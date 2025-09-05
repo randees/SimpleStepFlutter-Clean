@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
 import '../../models/conversation_message.dart';
 import 'supabase_service.dart';
 
@@ -28,7 +27,19 @@ class ConversationHistoryService {
     int? tokensUsed,
     Map<String, dynamic>? metadata,
   }) async {
+    final startTime = DateTime.now();
+    print('🔄 [CONVERSATION SAVE] Starting save attempt...');
+    print('🔄 [CONVERSATION SAVE] User ID: $userId');
+    print('🔄 [CONVERSATION SAVE] Session ID: $sessionId');
+    print('🔄 [CONVERSATION SAVE] Message Type: $messageType');
+    print('🔄 [CONVERSATION SAVE] Message Role: $messageRole');
+    print('🔄 [CONVERSATION SAVE] Message Length: ${messageContent.length} chars');
+
     try {
+      // Log which client we're using
+      final isUsingAdminClient = _supabase == SupabaseService.adminClient;
+      print('🔄 [CONVERSATION SAVE] Using ${isUsingAdminClient ? 'ADMIN' : 'REGULAR'} client');
+
       await _supabase.from('conversation_history').insert({
         'user_id': userId,
         'session_id': sessionId,
@@ -40,11 +51,17 @@ class ConversationHistoryService {
         'metadata': metadata,
       });
 
-      // Always log success (not just in debug mode)
-      print('✅ Message saved to conversation history');
+      final duration = DateTime.now().difference(startTime);
+      print('✅ [CONVERSATION SAVE] SUCCESS - Saved in ${duration.inMilliseconds}ms');
+      print('✅ [CONVERSATION SAVE] Message saved to conversation history');
     } catch (e) {
-      // Always log errors (not just in debug mode) for production debugging
-      print('❌ Error saving message to conversation history: $e');
+      final duration = DateTime.now().difference(startTime);
+      print('❌ [CONVERSATION SAVE] FAILED - Attempt took ${duration.inMilliseconds}ms');
+      print('❌ [CONVERSATION SAVE] Error: $e');
+      print('❌ [CONVERSATION SAVE] Error type: ${e.runtimeType}');
+      if (e is Exception) {
+        print('❌ [CONVERSATION SAVE] Exception details: ${e.toString()}');
+      }
       rethrow;
     }
   }
@@ -55,6 +72,11 @@ class ConversationHistoryService {
     int limit = 50,
     DateTime? since,
   }) async {
+    print('📚 [GET HISTORY] Starting conversation history retrieval...');
+    print('📚 [GET HISTORY] User ID: $userId');
+    print('📚 [GET HISTORY] Limit: $limit');
+    print('📚 [GET HISTORY] Since: $since');
+
     try {
       var query = _supabase
           .from('conversation_history')
@@ -67,7 +89,10 @@ class ConversationHistoryService {
         query = (query as dynamic).gte('created_at', since.toIso8601String());
       }
 
+      print('📚 [GET HISTORY] Executing database query...');
       final response = await query;
+      print('📚 [GET HISTORY] Database query completed');
+
       final messages = (response as List<dynamic>)
           .map(
             (json) =>
@@ -75,17 +100,13 @@ class ConversationHistoryService {
           )
           .toList();
 
-      if (kDebugMode) {
-        print(
-          '📚 Retrieved ${messages.length} messages from conversation history',
-        );
-      }
+      print('📚 [GET HISTORY] Retrieved ${messages.length} messages from database');
+      print('📚 [GET HISTORY] Returning messages in chronological order');
 
       return messages.reversed.toList(); // Return in chronological order
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error retrieving conversation history: $e');
-      }
+      print('❌ [GET HISTORY] Error retrieving conversation history: $e');
+      print('❌ [GET HISTORY] Returning empty list');
       return [];
     }
   }
@@ -103,9 +124,7 @@ class ConversationHistoryService {
 
       return response;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error retrieving conversation sessions: $e');
-      }
+      print('❌ [GET SESSIONS] Error retrieving conversation sessions: $e');
       return [];
     }
   }
@@ -126,9 +145,7 @@ class ConversationHistoryService {
           )
           .toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error retrieving session messages: $e');
-      }
+      print('❌ [GET SESSION MESSAGES] Error retrieving session messages: $e');
       return [];
     }
   }
@@ -141,13 +158,9 @@ class ConversationHistoryService {
           .delete()
           .eq('user_id', userId);
 
-      if (kDebugMode) {
-        print('🗑️ Deleted conversation history for user: $userId');
-      }
+      print('🗑️ [DELETE HISTORY] Deleted conversation history for user: $userId');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error deleting conversation history: $e');
-      }
+      print('❌ [DELETE HISTORY] Error deleting conversation history: $e');
       rethrow;
     }
   }
@@ -162,13 +175,9 @@ class ConversationHistoryService {
 
       // Note: This would require additional implementation for actual archiving
       // For now, just log the operation
-      if (kDebugMode) {
-        print('📦 Would archive conversations older than: $cutoffDate');
-      }
+      print('📦 [ARCHIVE] Would archive conversations older than: $cutoffDate');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error archiving conversations: $e');
-      }
+      print('❌ [ARCHIVE] Error archiving conversations: $e');
       rethrow;
     }
   }
@@ -202,9 +211,7 @@ class ConversationHistoryService {
 
       return stats;
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error retrieving conversation stats: $e');
-      }
+      print('❌ [GET STATS] Error retrieving conversation stats: $e');
       return {};
     }
   }
