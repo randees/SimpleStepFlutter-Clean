@@ -25,7 +25,7 @@ app.get('/api/config', (req, res) => {
   const config = {
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
-    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', // Required for admin operations
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', // Required for admin operationsf
     openaiApiKey: process.env.OPENAI_API_KEY || '',
     mcpEndpoint: process.env.MCP_ENDPOINT || '',
     mcpSecret: process.env.MCP_SECRET || '',
