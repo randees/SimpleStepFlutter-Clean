@@ -5,12 +5,31 @@ import 'conversation_service.dart';
 import '../../models/openai_function.dart';
 import '../../config/openai_config.dart';
 
+/// Enhanced response model for OpenAI API calls
+class OpenAIResponse {
+  final String content;
+  final String model;
+  final int? promptTokens;
+  final int? completionTokens;
+  final int? totalTokens;
+  final List<Map<String, dynamic>>? toolCalls;
+
+  OpenAIResponse({
+    required this.content,
+    required this.model,
+    this.promptTokens,
+    this.completionTokens,
+    this.totalTokens,
+    this.toolCalls,
+  });
+}
+
 /// Service for handling OpenAI API interactions
 class OpenAIService {
   static const String _apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   /// Call OpenAI API with conversation context and MCP function calling
-  Future<String> callOpenAI({
+  Future<OpenAIResponse> callOpenAI({
     required String userMessage,
     required String systemPrompt,
     required List<ChatMessage> conversationContext,
@@ -21,11 +40,17 @@ class OpenAIService {
 
     // Validate API key
     if (apiKey.isEmpty || apiKey == 'REPLACE_WITH_YOUR_OPENAI_API_KEY') {
-      return 'Error: OpenAI API key not configured. Please set OPENAI_API_KEY in your .env file.';
+      return OpenAIResponse(
+        content: 'Error: OpenAI API key not configured. Please set OPENAI_API_KEY in your .env file.',
+        model: 'gpt-3.5-turbo',
+      );
     }
 
     if (!OpenAIConfig.hasValidApiKeyFormat) {
-      return 'Error: Invalid OpenAI API key format. Please check your OPENAI_API_KEY in the .env file.';
+      return OpenAIResponse(
+        content: 'Error: Invalid OpenAI API key format. Please check your OPENAI_API_KEY in the .env file.',
+        model: 'gpt-3.5-turbo',
+      );
     }
 
     final headers = {
@@ -78,7 +103,10 @@ class OpenAIService {
         if (kDebugMode) {
           print('OpenAI API Error: ${response.statusCode} - ${response.body}');
         }
-        return 'Error: Unable to get AI response. Status: ${response.statusCode}';
+        return OpenAIResponse(
+          content: 'Error: Unable to get AI response. Status: ${response.statusCode}',
+          model: 'gpt-3.5-turbo',
+        );
       }
 
       final data = json.decode(response.body);
@@ -131,20 +159,41 @@ class OpenAIService {
           if (followUpResponse.statusCode == 200) {
             final followUpData = json.decode(followUpResponse.body);
             final followUpChoice = followUpData['choices'][0];
-            return followUpChoice['message']['content'] ?? 'No response';
+            final usage = followUpData['usage'];
+
+            return OpenAIResponse(
+              content: followUpChoice['message']['content'] ?? 'No response',
+              model: 'gpt-3.5-turbo',
+              promptTokens: usage?['prompt_tokens'],
+              completionTokens: usage?['completion_tokens'],
+              totalTokens: usage?['total_tokens'],
+            );
           }
         }
       } else {
         // Direct response without tool calls
-        return message['content'] ?? 'No response';
+        final usage = data['usage'];
+        return OpenAIResponse(
+          content: message['content'] ?? 'No response',
+          model: 'gpt-3.5-turbo',
+          promptTokens: usage?['prompt_tokens'],
+          completionTokens: usage?['completion_tokens'],
+          totalTokens: usage?['total_tokens'],
+        );
       }
 
-      return 'I gathered some health data but ran into processing limits. Please try asking a more specific question.';
+      return OpenAIResponse(
+        content: 'I gathered some health data but ran into processing limits. Please try asking a more specific question.',
+        model: 'gpt-3.5-turbo',
+      );
     } catch (e) {
       if (kDebugMode) {
         print('Network Error: $e');
       }
-      return 'Error: Network issue connecting to AI service.';
+      return OpenAIResponse(
+        content: 'Error: Network issue connecting to AI service.',
+        model: 'gpt-3.5-turbo',
+      );
     }
   }
 }

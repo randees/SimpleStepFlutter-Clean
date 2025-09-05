@@ -272,7 +272,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       );
 
       // Add AI response to conversation
-      _conversationService.addMessage(response, false);
+      _conversationService.addMessage(response.content, false);
 
       _questionController.clear();
 
