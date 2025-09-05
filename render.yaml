@@ -3,10 +3,7 @@ services:
     name: simple-step-flutter
     env: node
     buildCommand: |
-      npm install &&
-      flutter pub get &&
-      flutter build web --release \
-        --dart-define=FLUTTER_ENV=production \
-        --dart-define=DEBUG_MODE=false
+      npm install
     startCommand: node simple-server.js
-    pullRequestPreviewsEnabled: false
+    # Note: Environment variables must be set in Render dashboard
+    # The simple-server.js will serve both static files and provide /api/config endpoint

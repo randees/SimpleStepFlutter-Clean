@@ -33,12 +33,16 @@ class ConversationHistoryService {
     print('🔄 [CONVERSATION SAVE] Session ID: $sessionId');
     print('🔄 [CONVERSATION SAVE] Message Type: $messageType');
     print('🔄 [CONVERSATION SAVE] Message Role: $messageRole');
-    print('🔄 [CONVERSATION SAVE] Message Length: ${messageContent.length} chars');
+    print(
+      '🔄 [CONVERSATION SAVE] Message Length: ${messageContent.length} chars',
+    );
 
     try {
       // Log which client we're using
       final isUsingAdminClient = _supabase == SupabaseService.adminClient;
-      print('🔄 [CONVERSATION SAVE] Using ${isUsingAdminClient ? 'ADMIN' : 'REGULAR'} client');
+      print(
+        '🔄 [CONVERSATION SAVE] Using ${isUsingAdminClient ? 'ADMIN' : 'REGULAR'} client',
+      );
 
       await _supabase.from('conversation_history').insert({
         'user_id': userId,
@@ -52,11 +56,15 @@ class ConversationHistoryService {
       });
 
       final duration = DateTime.now().difference(startTime);
-      print('✅ [CONVERSATION SAVE] SUCCESS - Saved in ${duration.inMilliseconds}ms');
+      print(
+        '✅ [CONVERSATION SAVE] SUCCESS - Saved in ${duration.inMilliseconds}ms',
+      );
       print('✅ [CONVERSATION SAVE] Message saved to conversation history');
     } catch (e) {
       final duration = DateTime.now().difference(startTime);
-      print('❌ [CONVERSATION SAVE] FAILED - Attempt took ${duration.inMilliseconds}ms');
+      print(
+        '❌ [CONVERSATION SAVE] FAILED - Attempt took ${duration.inMilliseconds}ms',
+      );
       print('❌ [CONVERSATION SAVE] Error: $e');
       print('❌ [CONVERSATION SAVE] Error type: ${e.runtimeType}');
       if (e is Exception) {
@@ -100,7 +108,9 @@ class ConversationHistoryService {
           )
           .toList();
 
-      print('📚 [GET HISTORY] Retrieved ${messages.length} messages from database');
+      print(
+        '📚 [GET HISTORY] Retrieved ${messages.length} messages from database',
+      );
       print('📚 [GET HISTORY] Returning messages in chronological order');
 
       return messages.reversed.toList(); // Return in chronological order
@@ -158,7 +168,9 @@ class ConversationHistoryService {
           .delete()
           .eq('user_id', userId);
 
-      print('🗑️ [DELETE HISTORY] Deleted conversation history for user: $userId');
+      print(
+        '🗑️ [DELETE HISTORY] Deleted conversation history for user: $userId',
+      );
     } catch (e) {
       print('❌ [DELETE HISTORY] Error deleting conversation history: $e');
       rethrow;
