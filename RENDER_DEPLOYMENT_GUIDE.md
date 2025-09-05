@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide shows how to prebuild your Flutter web app locally and deploy it to Render as a static site.
+This guide shows how to prebuild your Flutter web app locally and deploy it to Render. **Important**: For proper environment variable handling, you need to deploy as a **Web Service** (not Static Site) because Flutter web apps need runtime access to environment variables.
 
 ## Step 1: Prebuild the App Locally
 
@@ -19,44 +19,48 @@ This will:
 - Create necessary Render configuration files (`_headers`, `_redirects`)
 - Output everything to `build/web/`
 
-## Step 2: Deploy to Render
+## Step 2: Deploy to Render (Web Service Required)
 
-### Option A: Static Site Deployment (Recommended)
+### Web Service Deployment (Required for Environment Variables)
 
 1. Go to Render Dashboard
    - Visit [Render Dashboard](https://dashboard.render.com)
-   - Click "New" → "Static Site"
+   - Click "New" → "Web Service"
 
 2. Connect Your Repository
    - Connect your GitHub/GitLab repository
-   - Set the **Root Directory** to: `build/web`
-   - Set the **Build Command** to: (leave empty)
-   - Set the **Publish Directory** to: `.` (current directory)
+   - Set the **Root Directory** to: `.` (project root)
+   - Set the **Runtime** to: `Node`
+   - Set the **Build Command** to:
+
+     ```bash
+     npm install
+     ```
+
+   - Set the **Start Command** to:
+
+     ```bash
+     node simple-server.js
+     ```
 
 3. Environment Variables
-   Add any necessary environment variables in Render's dashboard:
+   Add these environment variables in Render's dashboard:
+   - `SUPABASE_URL` - Your Supabase project URL
+   - `SUPABASE_ANON_KEY` - Your Supabase anonymous key
+   - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key (for admin operations)
+   - `OPENAI_API_KEY` - Your OpenAI API key
+   - `MCP_ENDPOINT` - Your MCP endpoint URL
+   - `MCP_SECRET` - Your MCP secret
    - `FLUTTER_ENV=production`
-   - Any API keys your app needs (if not using the server proxy)
+   - `DEBUG_MODE=false`
 
-### Option B: Web Service with Prebuilt Files
+### Why Web Service (Not Static Site)?
 
-If you prefer to use a web service instead:
+Flutter web apps cannot directly access Render's runtime environment variables. The `simple-server.js` provides:
 
-1. Update render.yaml (if using YAML config):
-
-   ```yaml
-   services:
-     - type: web
-       name: simple-step-flutter
-       env: static-site
-       buildCommand: ""  # No build needed
-       staticSitePath: build/web
-       startCommand: ""  # Static files don't need a start command
-   ```
-
-2. Deploy
-   - Push the prebuilt `build/web` directory to your repository
-   - Render will serve the static files directly
+- Static file serving for your Flutter app
+- `/api/config` endpoint that securely provides environment variables to your Flutter app at runtime
+- Proper handling of sensitive data (API keys are never exposed to the client)
 
 ## Step 3: Verify Deployment
 
@@ -87,6 +91,12 @@ After deployment:
 - Verify API endpoints are accessible
 - Confirm environment variables are set correctly
 
+### Environment Variable Issues
+
+- Make sure all required environment variables are set in Render
+- Check server logs for "Config API request" messages
+- Verify the `/api/config` endpoint returns the expected JSON
+
 ## Files Created by Build Script
 
 The build script creates these files in `build/web/`:
@@ -104,3 +114,4 @@ The build script creates these files in `build/web/`:
 - Sensitive files (`.env`, etc.) are automatically removed
 - The app is optimized for production deployment
 - All conversation service code is compiled and ready to run
+- **Environment variables are provided at runtime via the `/api/config` endpoint**
