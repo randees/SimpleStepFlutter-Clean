@@ -9,6 +9,7 @@ class ConversationMessage {
   final String? modelUsed;
   final int? tokensUsed;
   final Map<String, dynamic>? metadata;
+  final String? customAiPromptId; // Foreign key to custom_ai_prompts table
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -22,6 +23,7 @@ class ConversationMessage {
     this.modelUsed,
     this.tokensUsed,
     this.metadata,
+    this.customAiPromptId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -38,6 +40,7 @@ class ConversationMessage {
       modelUsed: json['model_used'] as String?,
       tokensUsed: json['tokens_used'] as int?,
       metadata: json['metadata'] as Map<String, dynamic>?,
+      customAiPromptId: json['custom_ai_prompt_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -55,6 +58,7 @@ class ConversationMessage {
       'model_used': modelUsed,
       'tokens_used': tokensUsed,
       'metadata': metadata,
+      'custom_ai_prompt_id': customAiPromptId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -71,6 +75,7 @@ class ConversationMessage {
     String? modelUsed,
     int? tokensUsed,
     Map<String, dynamic>? metadata,
+    String? customAiPromptId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -84,6 +89,7 @@ class ConversationMessage {
       modelUsed: modelUsed ?? this.modelUsed,
       tokensUsed: tokensUsed ?? this.tokensUsed,
       metadata: metadata ?? this.metadata,
+      customAiPromptId: customAiPromptId ?? this.customAiPromptId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
