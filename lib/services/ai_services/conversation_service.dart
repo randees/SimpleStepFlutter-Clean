@@ -44,7 +44,14 @@ class ConversationService {
     print('🚀 [CONVERSATION SERVICE] Initializing with user: $userId');
     _currentUserId = userId;
     _currentSessionId = _generateSessionId();
+
+    // Clear any existing messages to ensure fresh conversation
+    _messages.clear();
+
     print('🚀 [CONVERSATION SERVICE] Generated session ID: $_currentSessionId');
+    print(
+      '🚀 [CONVERSATION SERVICE] Cleared existing messages for fresh start',
+    );
     print('✅ [CONVERSATION SERVICE] Initialization complete');
   }
 
@@ -101,11 +108,13 @@ class ConversationService {
     String message,
     bool isUser, {
     Map<String, dynamic>? metadata,
+    String? customAiPromptId,
   }) {
     print('📝 [ADD MESSAGE] Adding new message to conversation');
     print('📝 [ADD MESSAGE] Message type: ${isUser ? 'USER' : 'ASSISTANT'}');
     print('📝 [ADD MESSAGE] Message length: ${message.length} chars');
     print('📝 [ADD MESSAGE] Current message count: ${_messages.length}');
+    print('📝 [ADD MESSAGE] Custom AI Prompt ID: $customAiPromptId');
 
     final chatMessage = ChatMessage(
       message: message,
@@ -124,7 +133,11 @@ class ConversationService {
       print(
         '📝 [ADD MESSAGE] User and session IDs available, attempting persistence...',
       );
-      _persistMessage(chatMessage, metadata: metadata);
+      _persistMessage(
+        chatMessage,
+        metadata: metadata,
+        customAiPromptId: customAiPromptId,
+      );
     } else {
       print(
         '⚠️ [ADD MESSAGE] User ID or Session ID missing, skipping persistence',
@@ -138,6 +151,7 @@ class ConversationService {
   Future<void> _persistMessage(
     ChatMessage message, {
     Map<String, dynamic>? metadata,
+    String? customAiPromptId,
   }) async {
     print('💾 [PERSIST MESSAGE] Starting message persistence...');
     print(
@@ -149,6 +163,7 @@ class ConversationService {
     print(
       '💾 [PERSIST MESSAGE] Timestamp: ${message.timestamp.toIso8601String()}',
     );
+    print('💾 [PERSIST MESSAGE] Custom AI Prompt ID: $customAiPromptId');
 
     try {
       // Check if we have the required IDs
@@ -183,6 +198,7 @@ class ConversationService {
         messageRole: message.isUser ? 'user' : 'assistant',
         modelUsed: 'gpt-3.5-turbo', // Could be made configurable
         metadata: mergedMetadata,
+        customAiPromptId: customAiPromptId,
       );
 
       print('✅ [PERSIST MESSAGE] Message persisted successfully');
@@ -196,9 +212,29 @@ class ConversationService {
   }
 
   void clearHistory() {
+    final oldSessionId = _currentSessionId;
+    final messageCount = _messages.length;
+    final oldContextSize = getConversationContext().length;
+
     _messages.clear();
     // Start a new session
     _currentSessionId = _generateSessionId();
+
+    // Verify conversation context is also cleared
+    final newContextSize = getConversationContext().length;
+
+    print('🧹 [CLEAR HISTORY] Cleared $messageCount messages');
+    print('🧹 [CLEAR HISTORY] Old conversation context size: $oldContextSize');
+    print('🧹 [CLEAR HISTORY] New conversation context size: $newContextSize');
+    print('🧹 [CLEAR HISTORY] Old session: $oldSessionId');
+    print('🧹 [CLEAR HISTORY] New session: $_currentSessionId');
+    print('✅ [CLEAR HISTORY] Fresh conversation started');
+
+    // Assertion to ensure context is properly cleared
+    assert(
+      newContextSize == 0,
+      'Conversation context should be empty after clearing history',
+    );
   }
 
   /// Generate a simple session ID
@@ -220,17 +256,46 @@ class ConversationService {
 
   /// Get conversation context for AI (last N messages)
   List<ChatMessage> getConversationContext({int maxMessages = 10}) {
-    if (_messages.isEmpty) return [];
+    print('🤖 [CONVERSATION CONTEXT] Retrieving context for AI...');
+    print(
+      '🤖 [CONVERSATION CONTEXT] Total messages available: ${_messages.length}',
+    );
+    print('🤖 [CONVERSATION CONTEXT] Max messages requested: $maxMessages');
+
+    if (_messages.isEmpty) {
+      print(
+        '🤖 [CONVERSATION CONTEXT] No messages available - returning empty context',
+      );
+      return [];
+    }
 
     // If last message is from user, exclude it (will be added separately)
     final messagesToInclude = _messages.last.isUser && _messages.length > 1
         ? _messages.sublist(0, _messages.length - 1)
         : _messages;
 
+    print(
+      '🤖 [CONVERSATION CONTEXT] Messages to include after user filter: ${messagesToInclude.length}',
+    );
+
     // Limit to maxMessages
-    return messagesToInclude.length > maxMessages
+    final contextMessages = messagesToInclude.length > maxMessages
         ? messagesToInclude.sublist(messagesToInclude.length - maxMessages)
         : messagesToInclude;
+
+    print(
+      '🤖 [CONVERSATION CONTEXT] Final context size: ${contextMessages.length}',
+    );
+
+    // Log the context messages for debugging
+    for (int i = 0; i < contextMessages.length; i++) {
+      final msg = contextMessages[i];
+      print(
+        '🤖 [CONVERSATION CONTEXT] [$i] ${msg.isUser ? 'USER' : 'AI'}: ${msg.message.substring(0, msg.message.length > 50 ? 50 : msg.message.length)}${msg.message.length > 50 ? '...' : ''}',
+      );
+    }
+
+    return contextMessages;
   }
 
   void dispose() {
