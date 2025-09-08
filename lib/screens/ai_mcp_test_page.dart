@@ -198,12 +198,13 @@ Always respond as if you're speaking directly to your client in a supportive con
       // Initialize conversation service with user ID
       _conversationService.initialize(user.id);
 
-      // Load existing conversation history from database
-      await _conversationService.loadConversationHistory();
+      // DO NOT load existing conversation history - we want a fresh conversation
+      // when a user is selected or when the conversation is cleared
+      // This was causing old conversations to be restored after clearing
 
       if (kDebugMode) {
         print(
-          '✅ Conversation service initialized for user: ${user.friendlyName}',
+          '✅ Conversation service initialized for user: ${user.friendlyName} (fresh conversation)',
         );
       }
     } catch (e) {
@@ -220,7 +221,7 @@ Always respond as if you're speaking directly to your client in a supportive con
 
     setState(() {
       _selectedUser = user;
-      // Clear conversation history when switching users
+      // Clear conversation history when switching users to ensure fresh conversation
       _conversationService.clearHistory();
     });
 
@@ -228,13 +229,32 @@ Always respond as if you're speaking directly to your client in a supportive con
       _initializeMCPService(user);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Switched to user: ${user.friendlyName}'),
+          content: Text(
+            'Switched to user: ${user.friendlyName} - Fresh conversation started',
+          ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
         ),
       );
     } else {
       _mcpService = null;
+    }
+  }
+
+  /// Handle AI model selection change (placeholder for future implementation)
+  void _onModelChanged(String? modelName) {
+    if (modelName != null) {
+      if (kDebugMode) {
+        print('🤖 AI model changed to: $modelName');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('AI model changed to: $modelName'),
+          backgroundColor: Colors.blue,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -302,8 +322,15 @@ Always respond as if you're speaking directly to your client in a supportive con
     });
 
     try {
-      // Add user question to conversation
-      _conversationService.addMessage(question, true);
+      // Get the custom prompt ID if a prompt is selected
+      final customPromptId = _selectedPrompt?.id;
+
+      // Add user question to conversation with custom prompt ID
+      _conversationService.addMessage(
+        question,
+        true,
+        customAiPromptId: customPromptId,
+      );
 
       // Get system prompt
       final systemPrompt = _promptService.getSystemPrompt(
@@ -319,13 +346,18 @@ Always respond as if you're speaking directly to your client in a supportive con
         executeMCPFunction: _executeMCPFunction,
       );
 
-      // Add AI response to conversation
-      _conversationService.addMessage(response.content, false);
+      // Add AI response to conversation with custom prompt ID
+      _conversationService.addMessage(
+        response.content,
+        false,
+        customAiPromptId: customPromptId,
+      );
 
       _questionController.clear();
 
       if (kDebugMode) {
         print('✅ AI response received successfully');
+        print('📝 Custom prompt ID used: $customPromptId');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -334,6 +366,7 @@ Always respond as if you're speaking directly to your client in a supportive con
       _conversationService.addMessage(
         'Sorry, there was an error processing your request: $e',
         false,
+        customAiPromptId: _selectedPrompt?.id,
       );
     } finally {
       setState(() {
@@ -456,11 +489,36 @@ Always respond as if you're speaking directly to your client in a supportive con
       if (prompt != null) {
         _customPromptController.text = prompt.promptText;
         _promptStatus = 'Loaded prompt: ${prompt.promptName}';
+
+        if (kDebugMode) {
+          print('✅ Loaded prompt: ${prompt.promptName}');
+        }
+
+        // Show user feedback about prompt loaded
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Loaded prompt: ${prompt.promptName}'),
+            backgroundColor: Colors.purple,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // Prompt was deselected (cleared)
+        _promptStatus = 'No prompt selected';
+
+        if (kDebugMode) {
+          print('✅ Prompt deselected');
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Prompt cleared'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     });
-    if (kDebugMode && prompt != null) {
-      print('✅ Loaded prompt: ${prompt.promptName}');
-    }
   }
 
   /// Delete saved prompt
@@ -534,9 +592,19 @@ Always respond as if you're speaking directly to your client in a supportive con
       _selectedPrompt = null;
       _promptStatus = 'Reset to default prompt';
     });
+
     if (kDebugMode) {
       print('🔄 Reset custom prompt to default');
     }
+
+    // Show user feedback about prompt reset
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Reset to default prompt'),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override

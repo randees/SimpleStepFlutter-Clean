@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../models/conversation_message.dart';
+import '../models/conversation_message.dart';
 import 'supabase_service.dart';
 
 /// Service for managing persistent conversation history in the database
@@ -26,6 +26,7 @@ class ConversationHistoryService {
     String? modelUsed,
     int? tokensUsed,
     Map<String, dynamic>? metadata,
+    String? customAiPromptId,
   }) async {
     final startTime = DateTime.now();
     print('🔄 [CONVERSATION SAVE] Starting save attempt...');
@@ -53,6 +54,7 @@ class ConversationHistoryService {
         'model_used': modelUsed,
         'tokens_used': tokensUsed,
         'metadata': metadata,
+        'custom_ai_prompt_id': customAiPromptId,
       });
 
       final duration = DateTime.now().difference(startTime);
